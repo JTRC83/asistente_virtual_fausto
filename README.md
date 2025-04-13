@@ -9,7 +9,7 @@ Este proyecto es un asistente virtual programado en Python que utiliza reconocim
 - **Interfaz gráfica:** Basada en Tkinter, proporciona una forma fácil e intuitiva de interactuar con el asistente.
 - **Gestión de variables de entorno:** Se utiliza un archivo `.env` para configurar parámetros, integraciones y claves API.
 - **Pruebas unitarias:** Se incluyen pruebas para asegurar el correcto funcionamiento de cada módulo.
-- **Gestión de contenido literario:** Diseñado para ir añadiendo información de los libros leídos y posteriormente comentarlos, permitiendo mantener un registro y generar conversaciones profundas sobre la literatura, al estilo del personaje Fausto de Goethe.
+- **Gestión de contenido literario:** Diseñado para ir añadiendo información de los libros leídos y, posteriormente, comentarlos, permitiendo mantener un registro y generar conversaciones profundas sobre la literatura, la ciencia, la psicología, la economía, etc., al estilo del personaje Fausto de Goethe.
 
 ## Instalación
 
