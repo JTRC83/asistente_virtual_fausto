@@ -4,6 +4,31 @@
   <meta charset="UTF-8">
   <title>Fausto AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <!-- Incluir la librería cliente de Socket.IO sin integridad -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    /* Estilos para diferenciar colores en modo claro */
+    .user-text {
+      color: blue;
+    }
+    .fausto-text {
+      color: green;
+    }
+    /* Contraste en modo oscuro */
+    body.dark-mode .user-text {
+      color: #66d9ef;    /* azul claro */
+      background: rgba(102,217,239,0.1);
+    }
+    body.dark-mode .fausto-text {
+      color: #a6e22e;    /* verde lima */
+      background: rgba(166,226,46,0.1);
+    }
+    .transcription-text span {
+      padding: 2px 4px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+  </style>
 </head>
 <body>
   <!-- HEADER -->
@@ -61,19 +86,13 @@
           </button>
           <div class="circle-wave" id="circle-wave">
             <svg viewBox="0 0 600 100" preserveAspectRatio="none">
-              <path d="M 0,50 
-                       C 25,10  75,90  100,50
-                       S 175,10  200,50
-                       S 275,90  300,50
-                       S 375,10  400,50
-                       S 475,90  500,50
-                       S 575,10  600,50" />
+              <path d="M 0,50 C 25,10 75,90 100,50 S 175,10 200,50 S 275,90 300,50 S 375,10 400,50 S 475,90 500,50 S 575,10 600,50" />
             </svg>
           </div>
         </div>
         
         <div class="transcription-text" id="transcription-text">
-          Transcripción del usuario aquí:
+          Transcripción del usuario:
         </div>
         <!-- Botones redondos debajo del área de transcripción -->
         <div class="round-btn-container">
@@ -117,45 +136,47 @@
     document.addEventListener("DOMContentLoaded", function() {
       // MODO OSCURO
       const toggle = document.getElementById('toggle-theme');
-      if (!toggle) {
-        console.error("No se encontró el elemento #toggle-theme");
-      } else {
+      if (toggle) {
         toggle.addEventListener('change', () => {
-          console.log("Modo claro/oscuro activado");
           document.body.classList.toggle('dark-mode');
         });
       }
       
-      // RECONOCIMIENTO DE VOZ CON WEB SPEECH API
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert("Tu navegador no soporta el reconocimiento de voz.");
-        return;
-      }
+      // Inicializamos Socket.IO
+      const socket = io();
       
-      const recognition = new SpeechRecognition();
-      recognition.lang = "es-ES";
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-      recognition.continuous = true;
-      
+      // Configuración para grabar audio con MediaRecorder
+      let mediaRecorder;
       const transcriptionText = document.getElementById("transcription-text");
+      let audioChunks = [];
       
-      recognition.onresult = function(event) {
-        let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            transcript += event.results[i][0].transcript + " ";
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          console.log("Acceso al micrófono concedido.");
+          let options = { mimeType: 'audio/webm;codecs=opus' };
+          try {
+            mediaRecorder = new MediaRecorder(stream, options);
+          } catch(e) {
+            console.error("No se pudo crear MediaRecorder con opciones:", e);
+            mediaRecorder = new MediaRecorder(stream);
           }
-        }
-        // Concatena el nuevo texto sin borrar lo anterior
-        transcriptionText.textContent += transcript;
-      };
+          mediaRecorder.ondataavailable = event => {
+            if (event.data && event.data.size > 0) {
+              audioChunks.push(event.data);
+            }
+          };
+          mediaRecorder.onstop = () => {
+            console.log("Grabación detenida, procesando blob...");
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
+            audioChunks = [];
+            audioBlob.arrayBuffer().then(buffer => {
+              socket.emit("audio_blob", new Uint8Array(buffer));
+            });
+          };
+        })
+        .catch(error => console.error("Error al acceder al micrófono:", error));
       
-      recognition.onend = function() {
-        console.log("Reconocimiento finalizado.");
-      };
-      
+      // Botón iniciar/detener
       const convoBtn = document.getElementById("conversation-btn");
       const circleWave = document.getElementById("circle-wave");
       let recording = false;
@@ -163,26 +184,48 @@
       convoBtn.addEventListener("click", function() {
         recording = !recording;
         if (recording) {
-          // No vaciar el área de transcripción para seguir acumulando texto
+          console.log("Iniciando grabación...");
           convoBtn.classList.add("recording");
           convoBtn.innerHTML = '<img src="{{ url_for("static", filename="images-icons/mic.png") }}" alt="Mic" class="mic-icon">';
           circleWave.style.display = "block";
-          recognition.start();
+          if (mediaRecorder.state === "inactive") mediaRecorder.start();
         } else {
+          console.log("Deteniendo grabación...");
           convoBtn.classList.remove("recording");
           convoBtn.innerHTML = '<img src="{{ url_for("static", filename="images-icons/play.png") }}" alt="Play" class="play-icon">';
           circleWave.style.display = "none";
-          recognition.stop();
+          if (mediaRecorder.state === "recording") mediaRecorder.stop();
         }
       });
       
-      // Resto de los event listeners (Historial, gestión de documentos, etc.)
+      // Transcripción del usuario con prefijo
+      socket.on("transcription_partial", function(data) {
+        console.log("Transcripción recibida:", data);
+        transcriptionText.innerHTML += 
+          "<span class='user-text'><strong>Usuario:</strong> " + data + "</span><br/>";
+      });
+      
+      // Respuesta de Fausto en texto
+      socket.on("gemma_response", function(data) {
+        console.log("Respuesta de Fausto recibida:", data);
+        transcriptionText.innerHTML += 
+          "<span class='fausto-text'><strong>Fausto:</strong><br/>" + data + "</span><br/>";
+      });
+      
+      // Reproducir voz de Fausto
+      socket.on("gemma_voice", function(base64Audio) {
+        console.log("Audio de Fausto recibido");
+        const audio = new Audio("data:audio/wav;base64," + base64Audio);
+        audio.play();
+      });
+      
+      // Historial, documentos y demás listeners...
       const viewHistoryBtn = document.getElementById('view-history-btn');
       const convHistory = document.getElementById('conversation-history');
       viewHistoryBtn.addEventListener('click', function() {
         let history = [
-          "Conversación 1: Hola, ¿cómo estás?",
-          "Conversación 2: ¿Qué opinas del libro 'Fausto'?",
+          "Conversación 1: Hola, ¿cómo estás?", 
+          "Conversación 2: ¿Qué opinas del libro 'Fausto'?", 
           "Conversación 3: Explícame el concepto de inteligencia artificial."
         ];
         convHistory.style.display = convHistory.style.display === "none" ? "block" : "none";
@@ -198,9 +241,7 @@
       
       viewDocsBtn.addEventListener('click', function() {
         let docs = [
-          "Libro: Fausto - Goethe",
-          "Artículo: Inteligencia Artificial y Literatura",
-          "Ensayo: La narrativa digital"
+          "Libro: Fausto - Goethe", "Artículo: Inteligencia Artificial y Literatura", "Ensayo: La narrativa digital"
         ];
         docsList.style.display = docsList.style.display === "none" ? "block" : "none";
         if (docsList.style.display === "block") {
@@ -210,9 +251,7 @@
       
       viewThemesBtn.addEventListener('click', function() {
         let temas = [
-          "Autor: Goethe",
-          "Género: Tragedia",
-          "Tema: Búsqueda del conocimiento"
+          "Autor: Goethe", "Género: Tragedia", "Tema: Búsqueda del conocimiento"
         ];
         themesList.style.display = themesList.style.display === "none" ? "block" : "none";
         if (themesList.style.display === "block") {
@@ -222,17 +261,15 @@
       
       const getSummaryBtn = document.getElementById('get-summary-btn');
       getSummaryBtn.addEventListener('click', function() {
-        alert("Función de resumen pendiente de implementación real. Aquí podrías llamar a tu API para obtener el resumen.");
+        alert("Función de resumen pendiente de implementación real.");
       });
-      
       const sendKnowledgeBtn = document.getElementById('send-knowledge-btn');
       sendKnowledgeBtn.addEventListener('click', function() {
         alert("Texto enviado al asistente (simulación).");
       });
-      
       const uploadFileBtn = document.getElementById('upload-file-btn');
       uploadFileBtn.addEventListener('click', function() {
-        alert("Función de carga de archivo pendiente de implementación.");
+        alert("Función de carga de archivo pendiente.");
       });
     });
   </script>

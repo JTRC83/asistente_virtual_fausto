@@ -345,3 +345,30 @@ footer {
   .footer-content p {
     margin: 5px 0;
   }
+
+  .user-text {
+    color: blue;
+}
+.fausto-text {
+    color: green;
+}
+
+body.dark-mode .user-text {
+  color: #66d9ef;    /* azul claro */
+}
+body.dark-mode .fausto-text {
+  color: #a6e22e;    /* verde lima */
+}
+
+/* Opcional: fondo tras los textos para mayor legibilidad */
+.transcription-text span {
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline-block;
+}
+body.dark-mode .user-text {
+  background: rgba(102,217,239,0.1);
+}
+body.dark-mode .fausto-text {
+  background: rgba(166,226,46,0.1);
+}
