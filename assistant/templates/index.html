@@ -4,43 +4,23 @@
   <meta charset="UTF-8">
   <title>Fausto AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <!-- Incluir la librería cliente de Socket.IO sin integridad -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-  <style>
-    /* Estilos para diferenciar colores en modo claro */
-    .user-text {
-      color: blue;
-    }
-    .fausto-text {
-      color: green;
-    }
-    /* Contraste en modo oscuro */
-    body.dark-mode .user-text {
-      color: #66d9ef;    /* azul claro */
-      background: rgba(102,217,239,0.1);
-    }
-    body.dark-mode .fausto-text {
-      color: #a6e22e;    /* verde lima */
-      background: rgba(166,226,46,0.1);
-    }
-    .transcription-text span {
-      padding: 2px 4px;
-      border-radius: 3px;
-      display: inline-block;
-    }
-  </style>
 </head>
 <body>
   <!-- HEADER -->
   <div class="header">
     <div class="header-left">
-      <img src="{{ url_for('static', filename='images-icons/fausto.png') }}" alt="Logo Fausto AI" class="header-logo">
-      <h1>Fausto AI</h1>
+      <h1>
+        <span>Fausto</span>
+        <img src="{{ url_for('static', filename='images-icons/fausto.png') }}"
+             alt="Logo Fausto AI" class="header-logo">
+        <span>AI</span>
+      </h1>
     </div>
     <div class="mode-toggle-container">
       <div class="theme-toggle">
         <input id="toggle-theme" type="checkbox">
-        <label for="toggle-theme">
+        <label for="toggle-theme" title="Alternar modo claro/oscuro">
           <span class="slider"></span>
           <span class="icon icon-sun">☀</span>
           <span class="icon icon-moon">🌙</span>
@@ -49,52 +29,51 @@
     </div>
   </div>
 
-  <!-- CONTENEDOR GENERAL: Sidebar izquierdo y contenido principal (derecha) -->
+  <!-- CONTENEDOR GENERAL -->
   <div class="container">
     <!-- SIDEBAR IZQUIERDO -->
     <div class="left-sidebar">
-      <!-- Historial de conversaciones -->
       <div class="sidebar-section">
-        <h3>Historial de conversaciones</h3>
-        <button class="btn" id="view-history-btn">
-          <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial" />Conversaciones pasadas
+        <button class="btn" id="view-history-btn" title="Conversaciones pasadas">
+          <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial" />
         </button>
+        <button class="btn" id="view-docs-btn" title="Libros/textos cargados">
+          <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Libros" />
+        </button>
+        <button class="btn" id="view-themes-btn" title="Temas">
+          <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas" />
+        </button>
+
         <div id="conversation-history" class="list" style="display: none;"></div>
-      </div>
-      <!-- Gestión de documentos -->
-      <div class="sidebar-section">
-        <h3>Gestión de documentos</h3>
-        <button class="btn" id="view-docs-btn">
-          <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Libros" />Libros/textos cargados
-        </button>
-        <button class="btn" id="view-themes-btn">
-          <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas" />Temas
-        </button>
         <div id="documents-list" class="list" style="display: none;"></div>
         <div id="themes-list" class="list" style="display: none;"></div>
       </div>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL (DERECHA) -->
+    <!-- CONTENIDO PRINCIPAL -->
     <div class="content">
-      <!-- Tarjeta de conversación -->
+      <!-- CARD DE CONVERSACIÓN -->
       <div class="card" id="conversation-card">
-        <!-- Contenedor para alinear el botón y la onda horizontalmente -->
-        <div class="mic-wave-container">
-          <button class="conversation-btn" id="conversation-btn">
+        <div class="mic-wave-container recording" id="mic-wave-container">
+          <!-- Botón con icono que cambia entre mic y play -->
+          <button class="conversation-btn" id="conversation-btn" title="Hablar / detener">
             <img src="{{ url_for('static', filename='images-icons/play.png') }}" alt="Play" class="play-icon">
           </button>
+
+          <!-- Círculo de ondas -->
           <div class="circle-wave" id="circle-wave">
             <svg viewBox="0 0 600 100" preserveAspectRatio="none">
-              <path d="M 0,50 C 25,10 75,90 100,50 S 175,10 200,50 S 275,90 300,50 S 375,10 400,50 S 475,90 500,50 S 575,10 600,50" />
+              <path d="M 0,50 C 25,10 75,90 100,50
+                      S 175,10 200,50 S 275,90 300,50
+                      S 375,10 400,50 S 475,90 500,50
+                      S 575,10 600,50" />
             </svg>
           </div>
         </div>
-        
+
         <div class="transcription-text" id="transcription-text">
           Transcripción del usuario:
         </div>
-        <!-- Botones redondos debajo del área de transcripción -->
         <div class="round-btn-container">
           <button class="round-btn" id="save-transcription-btn" title="Guardar transcripción">
             <img src="{{ url_for('static', filename='images-icons/guardar.png') }}" alt="Guardar">
@@ -105,19 +84,20 @@
         </div>
       </div>
 
-      <!-- Tarjeta para añadir conocimiento adicional -->
-      <div class="card">
+      <!-- CARD DE CONOCIMIENTO -->
+      <div class="card" id="knowledge-card">
         <h2>Añade conocimiento adicional</h2>
-        <textarea id="knowledge-text" rows="3" placeholder="Escribe aquí los conocimientos que quieras añadir..."></textarea>
+        <textarea id="knowledge-text" rows="3"
+                  placeholder="Escribe aquí los conocimientos que quieras añadir..."></textarea>
         <div class="btn-container">
-          <button class="btn" id="send-knowledge-btn">
-            <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Enviar" />Enviar texto
+          <button class="round-btn" id="send-knowledge-btn" title="Enviar texto">
+            <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Enviar">
           </button>
-          <button class="btn" id="upload-file-btn">
-            <img src="{{ url_for('static', filename='images-icons/subirarchivo.png') }}" alt="Archivo" />Cargar Archivo
+          <button class="round-btn" id="upload-file-btn" title="Cargar archivo">
+            <img src="{{ url_for('static', filename='images-icons/subirarchivo.png') }}" alt="Archivo">
           </button>
-          <button class="btn" id="get-summary-btn">
-            <img src="{{ url_for('static', filename='images-icons/resumen.png') }}" alt="Resumen" />Obtener resumen
+          <button class="round-btn" id="get-summary-btn" title="Obtener resumen">
+            <img src="{{ url_for('static', filename='images-icons/resumen.png') }}" alt="Resumen">
           </button>
         </div>
       </div>
@@ -132,145 +112,83 @@
     </div>
   </footer>
 
+  <!-- SCRIPT -->
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      // MODO OSCURO
+    document.addEventListener("DOMContentLoaded", function () {
       const toggle = document.getElementById('toggle-theme');
       if (toggle) {
         toggle.addEventListener('change', () => {
           document.body.classList.toggle('dark-mode');
         });
       }
-      
-      // Inicializamos Socket.IO
+
       const socket = io();
-      
-      // Configuración para grabar audio con MediaRecorder
       let mediaRecorder;
       const transcriptionText = document.getElementById("transcription-text");
       let audioChunks = [];
-      
+
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
-          console.log("Acceso al micrófono concedido.");
-          let options = { mimeType: 'audio/webm;codecs=opus' };
+          const options = { mimeType: 'audio/webm;codecs=opus' };
           try {
             mediaRecorder = new MediaRecorder(stream, options);
-          } catch(e) {
-            console.error("No se pudo crear MediaRecorder con opciones:", e);
+          } catch (e) {
             mediaRecorder = new MediaRecorder(stream);
           }
+
           mediaRecorder.ondataavailable = event => {
-            if (event.data && event.data.size > 0) {
-              audioChunks.push(event.data);
-            }
+            if (event.data && event.data.size > 0) audioChunks.push(event.data);
           };
+
           mediaRecorder.onstop = () => {
-            console.log("Grabación detenida, procesando blob...");
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
             audioChunks = [];
             audioBlob.arrayBuffer().then(buffer => {
               socket.emit("audio_blob", new Uint8Array(buffer));
             });
           };
-        })
-        .catch(error => console.error("Error al acceder al micrófono:", error));
-      
-      // Botón iniciar/detener
+        });
+
       const convoBtn = document.getElementById("conversation-btn");
-      const circleWave = document.getElementById("circle-wave");
+      const micWaveContainer = document.getElementById("mic-wave-container");
       let recording = false;
-      
-      convoBtn.addEventListener("click", function() {
+
+      convoBtn.addEventListener("click", function () {
         recording = !recording;
         if (recording) {
-          console.log("Iniciando grabación...");
           convoBtn.classList.add("recording");
-          convoBtn.innerHTML = '<img src="{{ url_for("static", filename="images-icons/mic.png") }}" alt="Mic" class="mic-icon">';
-          circleWave.style.display = "block";
+          micWaveContainer.classList.add("recording");
+          convoBtn.innerHTML =
+            '<img src="{{ url_for("static", filename="images-icons/mic.png") }}" alt="Mic" class="mic-icon">';
           if (mediaRecorder.state === "inactive") mediaRecorder.start();
         } else {
-          console.log("Deteniendo grabación...");
           convoBtn.classList.remove("recording");
-          convoBtn.innerHTML = '<img src="{{ url_for("static", filename="images-icons/play.png") }}" alt="Play" class="play-icon">';
-          circleWave.style.display = "none";
+          micWaveContainer.classList.remove("recording");
+          convoBtn.innerHTML =
+            '<img src="{{ url_for("static", filename="images-icons/play.png") }}" alt="Play" class="play-icon">';
           if (mediaRecorder.state === "recording") mediaRecorder.stop();
         }
       });
-      
-      // Transcripción del usuario con prefijo
-      socket.on("transcription_partial", function(data) {
-        console.log("Transcripción recibida:", data);
-        transcriptionText.innerHTML += 
+
+      socket.on("transcription_partial", function (data) {
+        transcriptionText.innerHTML +=
           "<span class='user-text'><strong>Usuario:</strong> " + data + "</span><br/>";
       });
-      
-      // Respuesta de Fausto en texto
-      socket.on("gemma_response", function(data) {
-        console.log("Respuesta de Fausto recibida:", data);
-        transcriptionText.innerHTML += 
+
+      socket.on("gemma_response", function (data) {
+        transcriptionText.innerHTML +=
           "<span class='fausto-text'><strong>Fausto:</strong><br/>" + data + "</span><br/>";
       });
-      
-      // Reproducir voz de Fausto
-      socket.on("gemma_voice", function(base64Audio) {
-        console.log("Audio de Fausto recibido");
+
+      socket.on("gemma_voice", function (base64Audio) {
         const audio = new Audio("data:audio/wav;base64," + base64Audio);
         audio.play();
       });
-      
-      // Historial, documentos y demás listeners...
-      const viewHistoryBtn = document.getElementById('view-history-btn');
-      const convHistory = document.getElementById('conversation-history');
-      viewHistoryBtn.addEventListener('click', function() {
-        let history = [
-          "Conversación 1: Hola, ¿cómo estás?", 
-          "Conversación 2: ¿Qué opinas del libro 'Fausto'?", 
-          "Conversación 3: Explícame el concepto de inteligencia artificial."
-        ];
-        convHistory.style.display = convHistory.style.display === "none" ? "block" : "none";
-        if (convHistory.style.display === "block") {
-          convHistory.innerHTML = "<ul>" + history.map(item => `<li>${item}</li>`).join("") + "</ul>";
-        }
-      });
-      
-      const viewDocsBtn = document.getElementById('view-docs-btn');
-      const viewThemesBtn = document.getElementById('view-themes-btn');
-      const docsList = document.getElementById('documents-list');
-      const themesList = document.getElementById('themes-list');
-      
-      viewDocsBtn.addEventListener('click', function() {
-        let docs = [
-          "Libro: Fausto - Goethe", "Artículo: Inteligencia Artificial y Literatura", "Ensayo: La narrativa digital"
-        ];
-        docsList.style.display = docsList.style.display === "none" ? "block" : "none";
-        if (docsList.style.display === "block") {
-          docsList.innerHTML = "<ul>" + docs.map(item => `<li>${item}</li>`).join("") + "</ul>";
-        }
-      });
-      
-      viewThemesBtn.addEventListener('click', function() {
-        let temas = [
-          "Autor: Goethe", "Género: Tragedia", "Tema: Búsqueda del conocimiento"
-        ];
-        themesList.style.display = themesList.style.display === "none" ? "block" : "none";
-        if (themesList.style.display === "block") {
-          themesList.innerHTML = "<ul>" + temas.map(item => `<li>${item}</li>`).join("") + "</ul>";
-        }
-      });
-      
-      const getSummaryBtn = document.getElementById('get-summary-btn');
-      getSummaryBtn.addEventListener('click', function() {
-        alert("Función de resumen pendiente de implementación real.");
-      });
-      const sendKnowledgeBtn = document.getElementById('send-knowledge-btn');
-      sendKnowledgeBtn.addEventListener('click', function() {
-        alert("Texto enviado al asistente (simulación).");
-      });
-      const uploadFileBtn = document.getElementById('upload-file-btn');
-      uploadFileBtn.addEventListener('click', function() {
-        alert("Función de carga de archivo pendiente.");
-      });
+
+      // Otros botones...
+      document.getElementById('get-summary-btn').onclick = () => alert("Resumen pendiente");
+      document.getElementById('send-knowledge-btn').onclick = () => alert("Texto enviado");
+      document.getElementById('upload-file-btn').onclick = () => alert("Carga de archivo pendiente");
     });
   </script>
 </body>

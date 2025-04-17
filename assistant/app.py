@@ -23,8 +23,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")  # Permite CORS para pruebas
 model = whisper.load_model("base")
 
 # Inicializamos el modelo de TTS de Coqui (en español).
-tts = TTS(model_name="tts_models/es/mai/tacotron2-DDC", progress_bar=False, gpu=False)
-
+tts = TTS(model_name="tts_models/es/css10/vits",        progress_bar=False, gpu=False)
 # Variable global para saber si ya se realizó la presentación inicial
 first_query = True
 
