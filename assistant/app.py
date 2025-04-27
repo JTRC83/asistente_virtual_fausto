@@ -5,7 +5,7 @@ import os
 import subprocess
 import json
 import base64
-
+from database import guardar_conversacion, obtener_conocimientos
 # Agregar safe globals para permitir que torch.load cargue ciertos tipos en Coqui TTS
 import torch
 import collections

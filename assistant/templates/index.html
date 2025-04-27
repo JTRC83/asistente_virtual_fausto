@@ -7,20 +7,20 @@
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
+
   <!-- HEADER -->
   <div class="header">
     <div class="header-left">
       <h1>
         <span>Fausto</span>
-        <img src="{{ url_for('static', filename='images-icons/fausto.png') }}"
-             alt="Logo Fausto AI" class="header-logo">
+        <img src="{{ url_for('static', filename='images-icons/fausto.png') }}" alt="Logo Fausto AI" class="header-logo">
         <span>AI</span>
       </h1>
     </div>
     <div class="mode-toggle-container">
       <div class="theme-toggle">
         <input id="toggle-theme" type="checkbox">
-        <label for="toggle-theme" title="Alternar modo claro/oscuro">
+        <label for="toggle-theme" title="Modo Claro/Oscuro">
           <span class="slider"></span>
           <span class="icon icon-sun">☀</span>
           <span class="icon icon-moon">🌙</span>
@@ -29,77 +29,79 @@
     </div>
   </div>
 
-  <!-- CONTENEDOR GENERAL -->
+  <!-- CONTENEDOR PRINCIPAL -->
   <div class="container">
-    <!-- SIDEBAR IZQUIERDO -->
+
+    <!-- LEFT SIDEBAR -->
     <div class="left-sidebar">
       <div class="sidebar-section">
-        <button class="btn" id="view-history-btn" title="Conversaciones pasadas">
-          <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial" />
+        <button id="view-history-btn" title="Historial">
+          <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial">
         </button>
-        <button class="btn" id="view-docs-btn" title="Libros/textos cargados">
-          <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Libros" />
+        <button id="view-docs-btn" title="Documentos">
+          <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Documentos">
         </button>
-        <button class="btn" id="view-themes-btn" title="Temas">
-          <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas" />
+        <button id="view-themes-btn" title="Temas">
+          <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas">
         </button>
-
-        <div id="conversation-history" class="list" style="display: none;"></div>
-        <div id="documents-list" class="list" style="display: none;"></div>
-        <div id="themes-list" class="list" style="display: none;"></div>
       </div>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- CONTENT (2 CARDS) -->
     <div class="content">
-      <!-- CARD DE CONVERSACIÓN -->
-      <div class="card" id="conversation-card">
-        <div class="mic-wave-container recording" id="mic-wave-container">
-          <!-- Botón con icono que cambia entre mic y play -->
-          <button class="conversation-btn" id="conversation-btn" title="Hablar / detener">
-            <img src="{{ url_for('static', filename='images-icons/play.png') }}" alt="Play" class="play-icon">
-          </button>
-
-          <!-- Círculo de ondas -->
-          <div class="circle-wave" id="circle-wave">
-            <svg viewBox="0 0 600 100" preserveAspectRatio="none">
-              <path d="M 0,50 C 25,10 75,90 100,50
-                      S 175,10 200,50 S 275,90 300,50
-                      S 375,10 400,50 S 475,90 500,50
-                      S 575,10 600,50" />
-            </svg>
+        <!-- CARD CONVERSACIÓN -->
+        <div class="card" id="conversation-card">
+          <div class="mic-wave-container">
+            <button class="conversation-btn" id="conversation-btn" title="Hablar/Detener">
+              <img src="{{ url_for('static', filename='images-icons/play.png') }}" alt="Play" class="play-icon">
+            </button>
+          </div>
+          <div class="transcription-text" id="transcription-text">
+            Transcripción:
+          </div>
+          <div class="round-btn-container">
+            <button class="round-btn" id="save-transcription-btn" title="Guardar">
+              <img src="{{ url_for('static', filename='images-icons/guardar.png') }}" alt="Guardar">
+            </button>
+            <button class="round-btn" id="to-pdf-btn" title="Exportar PDF">
+              <img src="{{ url_for('static', filename='images-icons/pdf.png') }}" alt="PDF">
+            </button>
           </div>
         </div>
-
-        <div class="transcription-text" id="transcription-text">
-          Transcripción del usuario:
-        </div>
-        <div class="round-btn-container">
-          <button class="round-btn" id="save-transcription-btn" title="Guardar transcripción">
-            <img src="{{ url_for('static', filename='images-icons/guardar.png') }}" alt="Guardar">
-          </button>
-          <button class="round-btn" id="to-pdf-btn" title="Convertir a PDF">
-            <img src="{{ url_for('static', filename='images-icons/pdf.png') }}" alt="PDF">
-          </button>
+      
+        <!-- CARD AÑADIR CONOCIMIENTO -->
+        <div class="card" id="knowledge-card">
+          <h2>Añade conocimiento adicional</h2>
+          <textarea id="knowledge-text" placeholder="Escribe aquí los conocimientos que quieras añadir..."></textarea>
+          <div class="round-btn-container">
+            <button class="round-btn" id="send-knowledge-btn" title="Enviar">
+              <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Enviar">
+            </button>
+            <button class="round-btn" id="upload-file-btn" title="Cargar archivo">
+              <img src="{{ url_for('static', filename='images-icons/subirarchivo.png') }}" alt="Archivo">
+            </button>
+            <button class="round-btn" id="get-summary-btn" title="Obtener resumen">
+              <img src="{{ url_for('static', filename='images-icons/resumen.png') }}" alt="Resumen">
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- CARD DE CONOCIMIENTO -->
-      <div class="card" id="knowledge-card">
-        <h2>Añade conocimiento adicional</h2>
-        <textarea id="knowledge-text" rows="3"
-                  placeholder="Escribe aquí los conocimientos que quieras añadir..."></textarea>
-        <div class="btn-container">
-          <button class="round-btn" id="send-knowledge-btn" title="Enviar texto">
-            <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Enviar">
-          </button>
-          <button class="round-btn" id="upload-file-btn" title="Cargar archivo">
-            <img src="{{ url_for('static', filename='images-icons/subirarchivo.png') }}" alt="Archivo">
-          </button>
-          <button class="round-btn" id="get-summary-btn" title="Obtener resumen">
-            <img src="{{ url_for('static', filename='images-icons/resumen.png') }}" alt="Resumen">
-          </button>
-        </div>
+    <!-- RIGHT SIDEBAR -->
+    <div class="right-sidebar">
+      <button id="toggle-right-sidebar" class="round-btn" title="Añadir tema/autor">+</button>
+      <div id="right-sidebar-content" class="sidebar-content">
+        <label for="theme-select">Tema:</label>
+        <select id="theme-select">
+          <option value="">-- Seleccionar tema --</option>
+          <option value="Inteligencia Artificial">Inteligencia Artificial</option>
+          <option value="Literatura">Literatura</option>
+          <option value="Ciencia">Ciencia</option>
+          <!-- Añadir más temas aquí -->
+        </select>
+
+        <label for="author-input">Autor:</label>
+        <input type="text" id="author-input" placeholder="Introduce el autor...">
       </div>
     </div>
   </div>
@@ -111,85 +113,8 @@
       <p>Diseñado por Joan Toni Ramon Crespí | Versión 1.0</p>
     </div>
   </footer>
-
-  <!-- SCRIPT -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const toggle = document.getElementById('toggle-theme');
-      if (toggle) {
-        toggle.addEventListener('change', () => {
-          document.body.classList.toggle('dark-mode');
-        });
-      }
-
-      const socket = io();
-      let mediaRecorder;
-      const transcriptionText = document.getElementById("transcription-text");
-      let audioChunks = [];
-
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          const options = { mimeType: 'audio/webm;codecs=opus' };
-          try {
-            mediaRecorder = new MediaRecorder(stream, options);
-          } catch (e) {
-            mediaRecorder = new MediaRecorder(stream);
-          }
-
-          mediaRecorder.ondataavailable = event => {
-            if (event.data && event.data.size > 0) audioChunks.push(event.data);
-          };
-
-          mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
-            audioChunks = [];
-            audioBlob.arrayBuffer().then(buffer => {
-              socket.emit("audio_blob", new Uint8Array(buffer));
-            });
-          };
-        });
-
-      const convoBtn = document.getElementById("conversation-btn");
-      const micWaveContainer = document.getElementById("mic-wave-container");
-      let recording = false;
-
-      convoBtn.addEventListener("click", function () {
-        recording = !recording;
-        if (recording) {
-          convoBtn.classList.add("recording");
-          micWaveContainer.classList.add("recording");
-          convoBtn.innerHTML =
-            '<img src="{{ url_for("static", filename="images-icons/mic.png") }}" alt="Mic" class="mic-icon">';
-          if (mediaRecorder.state === "inactive") mediaRecorder.start();
-        } else {
-          convoBtn.classList.remove("recording");
-          micWaveContainer.classList.remove("recording");
-          convoBtn.innerHTML =
-            '<img src="{{ url_for("static", filename="images-icons/play.png") }}" alt="Play" class="play-icon">';
-          if (mediaRecorder.state === "recording") mediaRecorder.stop();
-        }
-      });
-
-      socket.on("transcription_partial", function (data) {
-        transcriptionText.innerHTML +=
-          "<span class='user-text'><strong>Usuario:</strong> " + data + "</span><br/>";
-      });
-
-      socket.on("gemma_response", function (data) {
-        transcriptionText.innerHTML +=
-          "<span class='fausto-text'><strong>Fausto:</strong><br/>" + data + "</span><br/>";
-      });
-
-      socket.on("gemma_voice", function (base64Audio) {
-        const audio = new Audio("data:audio/wav;base64," + base64Audio);
-        audio.play();
-      });
-
-      // Otros botones...
-      document.getElementById('get-summary-btn').onclick = () => alert("Resumen pendiente");
-      document.getElementById('send-knowledge-btn').onclick = () => alert("Texto enviado");
-      document.getElementById('upload-file-btn').onclick = () => alert("Carga de archivo pendiente");
-    });
-  </script>
+  
+  <!-- Enlazas el nuevo main.js -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
