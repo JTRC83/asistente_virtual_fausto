@@ -15,6 +15,11 @@ body {
   min-height: 100vh;
 }
 
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 /* HEADER */
 .header {
   background: #fff;
@@ -100,6 +105,9 @@ body {
   align-items: center;
   padding: 12px 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: auto;
+  min-height: fit-content;
+  align-self: flex-start;
 }
 .sidebar-section {
   display: flex;
@@ -126,16 +134,17 @@ body {
 }
 
 /* CENTER CARDS */
-.center-content {
-  display: flex;
+.content {
   flex: 1;
-  flex-direction: row; /* Cambiar a row */
+  display: flex;
+  flex-direction: row;
   gap: 10px;
+  align-items: stretch;
 }
 .cards-row {
   flex: 1;
   display: flex;
-  flex-direction: column; /* Esto sí debe ser column, pero dentro de cada card */
+  flex-direction: column;
 }
 .card {
   flex: 1;
@@ -149,8 +158,10 @@ body {
 }
 .card h2 {
   font-size: 18px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  text-align: center;
 }
+
 .transcription-text,
 textarea {
   flex: 1;
@@ -164,77 +175,13 @@ textarea {
   overflow-y: auto;
 }
 
+/* TEXTOS DE CONVERSACIÓN */
 .user-text { color: blue; }
 .fausto-text { color: green; }
 
 body.dark-mode .user-text { color: #66d9ef; background: none; }
 body.dark-mode .fausto-text { color: #a6e22e; background: none; }
 
-/* TEXTOS DE CONVERSACIÓN */
-.user-text {
-  color: blue;
-}
-.fausto-text {
-  color: green;
-}
-
-/* DARK MODE Colores para usuario y Fausto */
-body.dark-mode .user-text {
-  color: #66d9ef;
-  background: none;
-}
-body.dark-mode .fausto-text {
-  color: #a6e22e;
-  background: none;
-}
-
-/* RIGHT SIDEBAR */
-.right-sidebar {
-  flex: 0 0 85px;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 45px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-#toggle-right-sidebar {
-  width: 60px;
-  height: 60px;
-  font-size: 40px;
-}
-.sidebar-content {
-  margin-top: 15px;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-}
-.sidebar-content label,
-.sidebar-content select,
-.sidebar-content input {
-  width: 100%;
-  margin-top: 8px;
-  font-size: 14px;
-}
-
-.left-sidebar,
-.right-sidebar {
-  width: 85px;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 45px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 0;
-  gap: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  height: auto; /* 🔥 Esto es lo importante */
-  min-height: fit-content; /* 🔥 */
-  align-self: flex-start; /* 🔥🔥🔥 Esto es lo que te faltaba */
-}
 /* BOTONES */
 .round-btn-container, .btn-container {
   display: flex;
@@ -257,6 +204,8 @@ body.dark-mode .fausto-text {
 }
 .round-btn:hover { background: #df2410; }
 .round-btn img { width: 30px; height: auto; }
+#save-transcription-btn img { width: 55px; }
+#get-summary-btn img { width: 45px; }
 
 /* MIC Y ANIMACIONES */
 .mic-wave-container {
@@ -281,50 +230,6 @@ body.dark-mode .fausto-text {
 }
 .conversation-btn.recording {
   animation: glow-pulse 1s infinite ease-in-out;
-}
-@keyframes glow-pulse {
-  0% { box-shadow: 0 0 0px rgba(255,0,0,0); transform: scale(1); }
-  30% { box-shadow: 0 0 30px rgba(255,0,0,0.8); transform: scale(1.1); }
-  60% { box-shadow: 0 0 45px rgba(255,50,50,1); transform: scale(1.05); }
-  100% { box-shadow: 0 0 0px rgba(255,0,0,0); transform: scale(1); }
-}
-
-/* FOOTER */
-footer {
-  background: #333;
-  color: #fff;
-  text-align: center;
-  padding: 10px 0;
-  margin-top: auto;
-  width: 100%;
-  border-top: 1px solid #bab0b0;
-}
-.footer-content p {
-  margin: 5px 0;
-}
-
-/* DARK MODE */
-body.dark-mode {
-  background-color: #2b2b2b; /* 🔥 Fondo oscuro real */
-  color: #eee; /* 🔥 Texto claro */
-}
-
-body.dark-mode .header,
-body.dark-mode .card,
-body.dark-mode .left-sidebar,
-body.dark-mode .right-sidebar,
-body.dark-mode textarea,
-body.dark-mode .transcription-text,
-body.dark-mode footer { /* 🔥 Añadido footer */
-  background: #444;
-  color: #eee;
-  border-color: #696868;
-}
-
-body.dark-mode .round-btn,
-body.dark-mode .conversation-btn {
-  background: #e82f1a;
-  color: black;
 }
 
 .conversation-btn {
@@ -352,25 +257,93 @@ body.dark-mode .conversation-btn {
   object-fit: contain;
   margin-top: 10px;
 }
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 0px rgba(255,0,0,0); transform: scale(1); }
+  30% { box-shadow: 0 0 30px rgba(255,0,0,0.8); transform: scale(1.1); }
+  60% { box-shadow: 0 0 45px rgba(255,50,50,1); transform: scale(1.05); }
+  100% { box-shadow: 0 0 0px rgba(255,0,0,0); transform: scale(1); }
+}
 
-.content {
-  flex: 1;
+/* FOOTER */
+footer {
+  background: #333;
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+  margin-top: auto;
+  width: 100%;
+  border-top: 1px solid #bab0b0;
+}
+.footer-content p {
+  margin: 5px 0;
+}
+
+/* DARK MODE */
+body.dark-mode {
+  background-color: #2b2b2b;
+  color: #eee;
+}
+body.dark-mode .header,
+body.dark-mode .card,
+body.dark-mode .left-sidebar,
+body.dark-mode textarea,
+body.dark-mode .transcription-text,
+body.dark-mode footer {
+  background: #444;
+  color: #eee;
+  border-color: #696868;
+}
+body.dark-mode .round-btn,
+body.dark-mode .conversation-btn {
+  background: #e82f1a;
+  color: black;
+}
+
+/* CAMPOS TEMA Y AUTOR */
+.input-row {
   display: flex;
-  flex-direction: row; /* FILA, NO COLUMNA */
-  gap: 10px;
-  align-items: stretch;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* ICONOS de los botones */
-.round-btn img {
-  width: 30px;
-  height: auto;
+/* Iconos dentro de los campos */
+.input-with-icon img.input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px; /* Icono Tema */
+  height: 32px;
+  pointer-events: none;
 }
 
-#save-transcription-btn img {
-  width: 55px; /* 🔥 Más grande solo el de guardar */
+/* Icono más grande solo para autor */
+#author-input + img.input-icon {
+  width: 42px;
+  height: 42px;
 }
 
-#get-summary-btn img {
-  width: 45px; /* 🔥 Más grande solo el de resumen */
+/* SELECT de tema (más estrecho) */
+.input-with-icon select {
+  width: 170px; /* 🔥 Más estrecho que antes */
+  height: 42px;
+  padding: 8px 8px 8px 48px;
+  border: 1px solid #ccc;
+  border-radius: 18px;
+  font-size: 14px;
+}
+
+/* INPUT de autor (más ancho) */
+.input-with-icon input {
+  width: 315px; /* 🔥 Más ancho */
+  height: 42px;
+  padding: 8px 8px 8px 48px;
+  border: 1px solid #ccc;
+  border-radius: 18px;
+  font-size: 14px;
 }

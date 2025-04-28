@@ -29,26 +29,28 @@
     </div>
   </div>
 
-  <!-- CONTENEDOR PRINCIPAL -->
-  <div class="container">
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-container">
+    <div class="container">
 
-    <!-- LEFT SIDEBAR -->
-    <div class="left-sidebar">
-      <div class="sidebar-section">
-        <button id="view-history-btn" title="Historial">
-          <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial">
-        </button>
-        <button id="view-docs-btn" title="Documentos">
-          <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Documentos">
-        </button>
-        <button id="view-themes-btn" title="Temas">
-          <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas">
-        </button>
+      <!-- LEFT SIDEBAR -->
+      <div class="left-sidebar">
+        <div class="sidebar-section">
+          <button id="view-history-btn" title="Historial">
+            <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial">
+          </button>
+          <button id="view-docs-btn" title="Documentos">
+            <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Documentos">
+          </button>
+          <button id="view-themes-btn" title="Temas">
+            <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas">
+          </button>
+        </div>
       </div>
-    </div>
 
-    <!-- CONTENT (2 CARDS) -->
-    <div class="content">
+      <!-- CONTENT (2 CARDS) -->
+      <div class="content">
+
         <!-- CARD CONVERSACIÓN -->
         <div class="card" id="conversation-card">
           <div class="mic-wave-container">
@@ -68,11 +70,47 @@
             </button>
           </div>
         </div>
-      
+
         <!-- CARD AÑADIR CONOCIMIENTO -->
         <div class="card" id="knowledge-card">
-          <h2>Añade conocimiento adicional</h2>
+          <h2>AÑADE CONOCIMIENTO ADICIONAL</h2>
+          
+          <!-- Fila para Tema y Autor -->
+          <div class="input-row">
+            <div class="input-with-icon">
+              <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Icono Tema" class="input-icon">
+              <select id="theme-select">
+                <option value="">Tema</option>
+                <option value="Antropología">Antropología</option>
+                <option value="Arte">Arte</option>
+                <option value="Astronomía">Astronomía</option>
+                <option value="Biología">Biología</option>
+                <option value="Ciencias Políticas">Ciencias Políticas</option>
+                <option value="Economía">Economía</option>
+                <option value="Filosofía">Filosofía</option>
+                <option value="Física">Física</option>
+                <option value="Genetica">Genetica</option>
+                <option value="Historia">Historia</option>
+                <option value="Inteligencia Artificial">Inteligencia Artificial</option>
+                <option value="Literatura">Literatura</option>
+                <option value="Matemáticas">Matemáticas</option>
+                <option value="Música">Música</option>
+                <option value="Psicología">Psicología</option>
+                <option value="Química">Química</option>
+                <option value="Sociología">Sociología</option>
+                <option value="Tecnología">Tecnología</option>
+              </select>
+            </div>
+            <div class="input-with-icon">
+              <img src="{{ url_for('static', filename='images-icons/autor.png') }}" alt="Icono Autor" class="input-icon">
+              <input type="text" id="author-input" placeholder="Introduce el autor...">
+            </div>
+          </div>
+
+          <!-- Textarea del conocimiento -->
           <textarea id="knowledge-text" placeholder="Escribe aquí los conocimientos que quieras añadir..."></textarea>
+
+          <!-- Botones de acción -->
           <div class="round-btn-container">
             <button class="round-btn" id="send-knowledge-btn" title="Enviar">
               <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Enviar">
@@ -85,26 +123,11 @@
             </button>
           </div>
         </div>
-      </div>
 
-    <!-- RIGHT SIDEBAR -->
-    <div class="right-sidebar">
-      <button id="toggle-right-sidebar" class="round-btn" title="Añadir tema/autor">+</button>
-      <div id="right-sidebar-content" class="sidebar-content">
-        <label for="theme-select">Tema:</label>
-        <select id="theme-select">
-          <option value="">-- Seleccionar tema --</option>
-          <option value="Inteligencia Artificial">Inteligencia Artificial</option>
-          <option value="Literatura">Literatura</option>
-          <option value="Ciencia">Ciencia</option>
-          <!-- Añadir más temas aquí -->
-        </select>
+      </div> <!-- cierre de content -->
 
-        <label for="author-input">Autor:</label>
-        <input type="text" id="author-input" placeholder="Introduce el autor...">
-      </div>
-    </div>
-  </div>
+    </div> <!-- cierre de container -->
+  </main>
 
   <!-- FOOTER -->
   <footer>
@@ -113,8 +136,7 @@
       <p>Diseñado por Joan Toni Ramon Crespí | Versión 1.0</p>
     </div>
   </footer>
-  
-  <!-- Enlazas el nuevo main.js -->
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
