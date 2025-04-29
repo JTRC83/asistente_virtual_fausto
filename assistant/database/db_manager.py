@@ -39,8 +39,16 @@ def guardar_conversacion(texto):
 
 # Función para guardar un conocimiento
 def guardar_conocimiento(tema, autor, texto):
-    cursor.execute('INSERT INTO conocimientos (tema, autor, texto) VALUES (?, ?, ?)', (tema, autor, texto))
+    conn = sqlite3.connect("database/fausto.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO conocimientos (tema, autor, texto)
+        VALUES (?, ?, ?)
+    """, (tema, autor, texto))
+
     conn.commit()
+    conn.close()
 
 def obtener_conversaciones():
     """Devuelve todas las conversaciones guardadas"""

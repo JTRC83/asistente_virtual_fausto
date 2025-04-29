@@ -1,33 +1,30 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 import whisper
 import os
 import subprocess
 import json
 import base64
-from database import guardar_conversacion, obtener_conocimientos
-# Agregar safe globals para permitir que torch.load cargue ciertos tipos en Coqui TTS
 import torch
 import collections
 from TTS.utils import radam
-
-torch.serialization.add_safe_globals([collections.defaultdict, dict, radam.RAdam])
-
 from TTS.api import TTS
+from database.db_manager import guardar_conocimiento, obtener_conocimientos
+
+# Fix de Coqui TTS con pickle
+torch.serialization.add_safe_globals([collections.defaultdict, dict, radam.RAdam])
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, cors_allowed_origins="*")  # Permite CORS para pruebas
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Inicializamos el modelo de Whisper (usa "base" o el que desees)
+# Whisper
 model = whisper.load_model("base")
 
-# Inicializamos el modelo de TTS de Coqui (en español).
-tts = TTS(model_name="tts_models/es/css10/vits",        progress_bar=False, gpu=False)
-# Variable global para saber si ya se realizó la presentación inicial
-first_query = True
+# TTS español
+tts = TTS(model_name="tts_models/es/css10/vits", progress_bar=False, gpu=False)
 
-# Texto introductorio sobre Fausto
+first_query = True
 FAUSTO_STORY = (
     "Imagina que Fausto era un hombre muy inteligente, un sabio, pero se sentía un poco triste "
     "porque pensaba que no sabía lo suficiente del mundo. Quería experimentarlo todo y conocer "
@@ -41,14 +38,9 @@ FAUSTO_STORY = (
 )
 
 def query_gemma(prompt):
-    """
-    Envía el prompt (texto) en formato JSON a Gemma 3 usando ollama y pipes.
-    Solo la primera vez se presenta Fausto y cuenta la anécdota; luego, responde siempre en español.
-    """
     global first_query
 
     if first_query:
-        # Instrucciones para la primera consulta
         instrucciones_iniciales = (
             "Responde siempre en español. "
             "Eres Fausto, un asistente virtual inspirado en el personaje de Goethe, con un sistema RAG integrado. "
@@ -59,12 +51,7 @@ def query_gemma(prompt):
         prompt_final = instrucciones_iniciales + prompt
         first_query = False
     else:
-        # Instrucciones para las consultas posteriores
-        instrucciones_siguientes = (
-            "Responde siempre en español. "
-            "El usuario dice: "
-        )
-        prompt_final = instrucciones_siguientes + prompt
+        prompt_final = "Responde siempre en español. El usuario dice: " + prompt
 
     payload = json.dumps({"prompt": prompt_final})
 
@@ -76,36 +63,28 @@ def query_gemma(prompt):
             capture_output=True,
             check=True
         )
-        # Devolvemos la respuesta tal cual (sin añadir "Fausto:\n")
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error en la consulta a Gemma 3: {e.stderr}"
 
 def synthesize_text(text, output_file="response.wav"):
-    """
-    Usa Coqui TTS para sintetizar el texto en un archivo de audio.
-    Luego codifica ese archivo en base64 y lo devuelve como cadena,
-    eliminando el archivo temporal.
-    """
     tts.tts_to_file(text=text, file_path=output_file)
     with open(output_file, "rb") as f:
         audio_data = f.read()
     os.remove(output_file)
     return base64.b64encode(audio_data).decode("utf-8")
 
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 @socketio.on('audio_blob')
 def on_audio_blob(data):
-    """
-    Maneja la recepción del audio completo (tipo bytes) cuando el usuario detiene la grabación.
-    Se guarda, se transcribe con Whisper, y se envía el texto a Gemma 3.
-    Luego se sintetiza la respuesta con Coqui TTS y ambos resultados se emiten al cliente.
-    """
     temp_filename = "temp_audio.webm"
     with open(temp_filename, "wb") as f:
         f.write(data)
 
     try:
-        # Transcripción con Whisper
         result = model.transcribe(
             temp_filename,
             verbose=True,
@@ -126,16 +105,10 @@ def on_audio_blob(data):
                 transcription += w["word"].strip() + " "
                 previous_end = w["end"]
 
-        # Emitimos la transcripción al cliente
         emit("transcription_partial", transcription)
-
-        # Enviamos la transcripción a Gemma 3
         gemma_response = query_gemma(transcription)
         emit("gemma_response", gemma_response)
-
-        # Sintetizamos la respuesta de Gemma 3 con Coqui TTS
         synthesized_audio = synthesize_text(gemma_response)
-        # Emitimos el audio (en base64) para que el cliente lo reproduzca
         emit("gemma_voice", synthesized_audio)
 
     except Exception as e:
@@ -144,6 +117,20 @@ def on_audio_blob(data):
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
 
+@socketio.on('guardar_conocimiento')
+def handle_guardar_conocimiento(data):
+    try:
+        tema = data.get("tema")
+        autor = data.get("autor")
+        texto = data.get("texto")
+
+        guardar_conocimiento(tema, autor, texto)
+        print(f"✔ Conocimiento guardado: Tema={tema}, Autor={autor}")
+        emit("confirmacion_guardado", {"status": "ok"})
+    except Exception as e:
+        print(f"[❌] Error al guardar conocimiento:", e)
+        emit("confirmacion_guardado", {"status": "error"})
+
 @socketio.on('connect')
 def on_connect():
     print("Cliente conectado.")
@@ -151,10 +138,6 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     print("Cliente desconectado.")
-
-@app.route("/")
-def index():
-    return render_template("index.html")
 
 if __name__ == "__main__":
     socketio.run(app, debug=True, port=5000)

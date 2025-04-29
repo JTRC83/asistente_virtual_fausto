@@ -299,6 +299,18 @@ body.dark-mode .conversation-btn {
   color: black;
 }
 
+/* MODO OSCURO para select e input */
+body.dark-mode select,
+body.dark-mode input {
+  background-color: #444;
+  color: #eee;
+  border-color: #666;
+}
+
+body.dark-mode select::placeholder,
+body.dark-mode input::placeholder {
+  color: #aaa;
+}
 /* CAMPOS TEMA Y AUTOR */
 .input-row {
   display: flex;
@@ -346,4 +358,65 @@ body.dark-mode .conversation-btn {
   border: 1px solid #ccc;
   border-radius: 18px;
   font-size: 14px;
+}
+
+.success-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28a745;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-size: 16px;
+  z-index: 9999;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  animation: fadeinout 3s ease forwards;
+}
+
+@keyframes fadeinout {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+.custom-alert {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  background: #fff;
+  color: #333;
+  border: 2px solid #af4040;
+  padding: 20px 30px;
+  border-radius: 12px;
+  z-index: 9999;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  width: 320px;
+  text-align: center;
+}
+.custom-alert h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #af4040;
+}
+.custom-alert p {
+  font-size: 14px;
+  margin: 10px 0 20px;
+}
+.custom-alert button {
+  background: #af4040;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.hidden {
+  display: none;
+}
+
+.custom-alert.hidden {
+  display: none;
 }

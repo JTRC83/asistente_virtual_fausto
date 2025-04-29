@@ -85,6 +85,7 @@
                 <option value="Arte">Arte</option>
                 <option value="Astronomía">Astronomía</option>
                 <option value="Biología">Biología</option>
+                <option value="Ciencia">Ciencia</option>
                 <option value="Ciencias Políticas">Ciencias Políticas</option>
                 <option value="Economía">Economía</option>
                 <option value="Filosofía">Filosofía</option>
@@ -136,7 +137,11 @@
       <p>Diseñado por Joan Toni Ramon Crespí | Versión 1.0</p>
     </div>
   </footer>
-
+  <div id="custom-alert" class="custom-alert hidden">
+    <h3>🧠 Fausto dice...</h3>
+    <p id="alert-text"></p>
+    <button id="cerrar-alerta-btn">Aceptar</button>  
+  </div>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
