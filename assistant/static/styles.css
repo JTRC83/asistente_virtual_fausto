@@ -388,7 +388,7 @@ body.dark-mode input::placeholder {
   transform: translate(-50%, -30%);
   background: #fff;
   color: #333;
-  border: 2px solid #af4040;
+  border: 2px solid #e82f1a; /* 🔴 color actualizado */
   padding: 20px 30px;
   border-radius: 12px;
   z-index: 9999;
@@ -396,27 +396,332 @@ body.dark-mode input::placeholder {
   width: 320px;
   text-align: center;
 }
+
 .custom-alert h3 {
   margin: 0 0 10px;
   font-size: 18px;
-  color: #af4040;
+  color: #e82f1a; /* 🔴 color actualizado */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
+
+.custom-alert h3 img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 .custom-alert p {
   font-size: 14px;
   margin: 10px 0 20px;
 }
+
 .custom-alert button {
-  background: #af4040;
+  background: #e82f1a; /* 🔴 color actualizado */
   color: white;
   border: none;
   padding: 8px 20px;
   border-radius: 8px;
   cursor: pointer;
 }
-.hidden {
+
+.hidden,
+.custom-alert.hidden {
   display: none;
 }
 
-.custom-alert.hidden {
+/* MODAL */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.hidden {
   display: none;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 18px;
+  padding: 30px;
+  width: 90%;
+  max-width: 1000px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  color: #000; /* 🔥 texto negro */
+  text-align: center;
+}
+
+.modal-content h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* Espacio entre icono y texto */
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #0c0c0c;
+  font-weight: bold;
+  text-align: center;
+}
+
+.modal-content h2 img {
+  width: 30px;
+  height: 30px;
+}
+
+.modal-icon {
+  width: 32px;
+  height: 32px;
+}
+
+/* Botón cerrar */
+.close-modal {
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* TABLA */
+.document-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.document-table th,
+.document-table td {
+  padding: 12px;
+  text-align: left;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  color: #000;
+  background-color: #fff;
+}
+
+/* Eliminar borde derecho de la última columna */
+.document-table th:last-child,
+.document-table td:last-child {
+  border-right: none;
+}
+
+/* Cabecera */
+.document-table th {
+  background-color: #e82f1a;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Última fila: eliminar borde inferior */
+.document-table tr:last-child td {
+  border-bottom: none;
+}
+
+.document-table thead th:nth-child(1),
+.document-table td:nth-child(1) {
+  width: 20%;
+}
+
+.document-table thead th:nth-child(2),
+.document-table td:nth-child(2) {
+  width: 20%;
+}
+
+.document-table thead th:nth-child(3),
+.document-table td:nth-child(3) {
+  width: 60%;
+}
+
+/* Modal de Temas */
+#modal-temas .modal-content {
+  max-width: 380px; /* Reducido */
+  padding: 20px;
+  font-size: 14px;
+}
+
+#lista-temas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lista-temas li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #ccc;
+  font-size: 14px;
+}
+
+th {
+  cursor: pointer;
+  user-select: none;
+}
+
+.flecha {
+  font-size: 14px;
+  margin-left: 6px;
+}
+
+body.dark-mode .modal-content {
+  background-color: #434242; /* más claro que #2c2c2c */
+  color: #eee;
+  border: 1px solid #666;
+}
+
+body.dark-mode .modal-content h2 {
+  color: #f0f0f0; /* blanco suave */
+}
+
+body.dark-mode .modal-content table {
+  color: #eee;
+}
+
+body.dark-mode .modal-content th {
+  background-color: #e82f1a;
+  color: white;
+}
+
+body.dark-mode .modal-content td {
+  border-top: 1px solid #555;
+}
+
+body.dark-mode .modal-content .flecha,
+body.dark-mode .modal-content span {
+  color: #ccc;
+}
+
+body.dark-mode .modal-content .close-modal {
+  color: white;
+}
+
+/* MODAL CARGA DE ARCHIVO */
+.modal-upload .modal-content {
+  max-width: 300px;
+  margin: auto;
+  padding: 30px;
+  border-radius: 16px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-form-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 25px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  align-items: center;
+}
+
+.upload-form-wrapper .input-row {
+  width: 100%;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.upload-form-wrapper .input-with-icon {
+  flex: 1;
+}
+
+.upload-form-wrapper input[type="file"] {
+  margin-top: 10px;
+}
+
+.upload-form-wrapper button {
+  margin-top: 15px;
+}
+
+.modal-content.archivo {
+  max-width: 600px;
+  margin: auto;
+  text-align: center;
+}
+
+.archivo-form-container {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.archivo-input-file input[type="file"] {
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Contenedor centrado para el botón enviar */
+.archivo-btn-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Estilo del input file */
+.archivo-input-file {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Ocultamos input y estilizamos label como botón */
+.archivo-input-file input[type="file"] {
+  display: none;
+}
+
+.archivo-label {
+  background-color: #e82f1a;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.archivo-label:hover {
+  background-color: #df2410;
+}
+
+.modal-icon.normal-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.archivo-contenedor {
+  border: 2px dashed #bbb;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }

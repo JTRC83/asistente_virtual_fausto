@@ -10,13 +10,87 @@ import collections
 from TTS.utils import radam
 from TTS.api import TTS
 from database.db_manager import guardar_conocimiento, obtener_conocimientos
-
+from flask import request, jsonify
+from database.db_manager import obtener_conocimientos
+from database.db_manager import obtener_conversaciones
+from database.db_manager import obtener_conocimientos
+from werkzeug.utils import secure_filename
+import docx
 # Fix de Coqui TTS con pickle
 torch.serialization.add_safe_globals([collections.defaultdict, dict, radam.RAdam])
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Ruta para obtener conocimientos
+@app.route("/obtener_conocimientos")
+def obtener_conocimientos_api():
+    conocimientos = obtener_conocimientos()
+    return jsonify(conocimientos)
+
+# Ruta para obtener conversaciones
+@app.route("/obtener_conversaciones")
+def obtener_conversaciones_api():
+    conversaciones = obtener_conversaciones()
+    return jsonify([{"fecha": fila[1], "texto": fila[2]} for fila in conversaciones])
+
+# Ruta para obtener el estado de los temas
+@app.route("/estado_temas")
+def estado_temas():
+    try:
+        todos_los_temas = [
+            "Antropología", "Arte", "Astronomía", "Biología", "Ciencia", "Ciencias Políticas",
+            "Economía", "Filosofía", "Física", "Genetica", "Historia", "Inteligencia Artificial",
+            "Literatura", "Matemáticas", "Música", "Psicología", "Química", "Sociología", "Tecnología"
+        ]
+
+        conocimientos = obtener_conocimientos()  # Devuelve lista de dicts con clave 'tema'
+        temas_con_conocimiento = {k["tema"] for k in conocimientos}
+
+        resultado = []
+        for tema in todos_los_temas:
+            estado = "ok" if tema in temas_con_conocimiento else "vacio"
+            resultado.append({"tema": tema, "estado": estado})
+
+        return jsonify(resultado)
+
+    except Exception as e:
+        print(f"[❌] Error en /estado_temas:", e)
+        return jsonify([]), 500
+    
+# Ruta para cargar archivos
+@app.route("/cargar_archivo", methods=["POST"])
+def cargar_archivo():
+    try:
+        archivo = request.files.get("archivo")
+        tema = request.form.get("tema")
+        autor = request.form.get("autor")
+
+        if not archivo or not tema or not autor:
+            return jsonify({"status": "error", "msg": "Faltan campos."}), 400
+
+        # Asegura un nombre seguro
+        nombre_archivo = secure_filename(archivo.filename)
+        extension = nombre_archivo.rsplit(".", 1)[-1].lower()
+
+        if extension == "txt":
+            texto = archivo.read().decode("utf-8")
+        elif extension == "docx":
+            doc = docx.Document(archivo)
+            texto = "\n".join([p.text for p in doc.paragraphs])
+        else:
+            return jsonify({"status": "error", "msg": "Formato no soportado"}), 400
+
+        from database.db_manager import guardar_conocimiento
+        guardar_conocimiento(tema, autor, texto)
+
+        print(f"📄 Archivo procesado y conocimiento guardado - Tema: {tema}, Autor: {autor}")
+        return jsonify({"status": "ok"})
+
+    except Exception as e:
+        print("[❌] Error al procesar archivo:", e)
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
 # Whisper
 model = whisper.load_model("base")
@@ -138,6 +212,17 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     print("Cliente desconectado.")
+
+@socketio.on('guardar_transcripcion')
+def handle_guardar_transcripcion(data):
+    try:
+        texto = data.get("texto")
+        from database.db_manager import guardar_conversacion
+        guardar_conversacion(texto)
+        emit("confirmacion_transcripcion", {"status": "ok"})
+    except Exception as e:
+        print(f"[❌] Error al guardar transcripción:", e)
+        emit("confirmacion_transcripcion", {"status": "error"})
 
 if __name__ == "__main__":
     socketio.run(app, debug=True, port=5000)

@@ -4,9 +4,7 @@ import os
 
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'fausto.db')
 
-# guardar_conversacion, guardar_conocimiento, obtener_conversaciones, etc.
-# Conexión y creación de la base de datos
-conn = sqlite3.connect('fausto.db')
+conn = sqlite3.connect(DATABASE_PATH)
 cursor = conn.cursor()
 
 # Crear tabla de conversaciones
@@ -33,9 +31,12 @@ conn.commit()
 
 # Función para guardar una conversación
 def guardar_conversacion(texto):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
     fecha = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute('INSERT INTO conversaciones (fecha, texto) VALUES (?, ?)', (fecha, texto))
     conn.commit()
+    conn.close()
 
 # Función para guardar un conocimiento
 def guardar_conocimiento(tema, autor, texto):
@@ -60,13 +61,15 @@ def obtener_conversaciones():
     return resultados
 
 def obtener_conocimientos():
-    """Devuelve todos los conocimientos guardados"""
+    """Devuelve todos los conocimientos guardados como lista de diccionarios"""
     conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row  # Permite acceder como diccionario
     c = conn.cursor()
-    c.execute('SELECT * FROM conocimientos')
-    resultados = c.fetchall()
+    c.execute('SELECT tema, autor, texto FROM conocimientos')
+    filas = c.fetchall()
     conn.close()
-    return resultados
+
+    return [dict(fila) for fila in filas]
 
 # Función para listar conversaciones
 def listar_conversaciones():

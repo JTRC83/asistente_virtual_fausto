@@ -137,11 +137,125 @@
       <p>Diseñado por Joan Toni Ramon Crespí | Versión 1.0</p>
     </div>
   </footer>
+  <!-- ALERTA PERSONALIZADA -->
   <div id="custom-alert" class="custom-alert hidden">
     <h3>🧠 Fausto dice...</h3>
     <p id="alert-text"></p>
     <button id="cerrar-alerta-btn">Aceptar</button>  
   </div>
+
+  <!-- MODAL HISTORIAL -->
+<div id="modal-historial" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-modal" id="cerrar-modal-historial">&times;</span>
+    <h2><img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial" class="modal-icon"> Historial de Transcripciones</h2>
+    <table class="document-table">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Fecha</th>
+          <th style="width: 70%;">Transcripción</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-historial">
+        <!-- Aquí irán las transcripciones -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  <!-- MODAL DE DOCUMENTOS -->
+<!-- Modal de documentos -->
+<div id="modal-documentos" class="modal hidden">
+  <div class="modal-content">
+    <span id="cerrar-modal" class="close-modal">&times;</span>
+    <h2>
+      <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Libros" class="modal-icon">
+      Documentos Añadidos
+    </h2>
+    <table class="document-table">
+      <thead>
+        <tr>
+          <th id="th-tema">Tema <span class="flecha">⬍</span></th>
+          <th id="th-autor">Autor <span class="flecha">⬍</span></th>
+          <th>Texto</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-conocimientos">
+        <!-- Los datos se insertarán aquí -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL TEMAS -->
+<div id="modal-temas" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-modal" id="cerrar-modal-temas">&times;</span>
+    <h2><img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas" class="modal-icon"> Estado de los Temas</h2>
+    <ul class="tema-lista" id="lista-temas">
+      <!-- Se llenará dinámicamente -->
+    </ul>
+  </div>
+</div>
+
+<!-- MODAL DE CARGA DE ARCHIVO -->
+<div id="modal-archivo" class="modal hidden">
+  <div class="modal-content archivo">
+        <span class="close-modal" onclick="cerrarModalArchivo()">&times;</span>
+    <h2>
+      <img src="{{ url_for('static', filename='images-icons/subirarchivo.png') }}" alt="Subir" class="modal-icon normal-icon">
+      Cargar archivo
+    </h2>
+
+    <!-- Contenedor con borde -->
+    <div class="archivo-contenedor">
+      <div class="input-row">
+        <div class="input-with-icon">
+          <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Icono Tema" class="input-icon">
+          <select id="archivo-tema">
+            <option value="">Tema</option>
+            <option value="Antropología">Antropología</option>
+            <option value="Arte">Arte</option>
+            <option value="Astronomía">Astronomía</option>
+            <option value="Biología">Biología</option>
+            <option value="Ciencia">Ciencia</option>
+            <option value="Ciencias Políticas">Ciencias Políticas</option>
+            <option value="Economía">Economía</option>
+            <option value="Filosofía">Filosofía</option>
+            <option value="Física">Física</option>
+            <option value="Genetica">Genetica</option>
+            <option value="Historia">Historia</option>
+            <option value="Inteligencia Artificial">Inteligencia Artificial</option>
+            <option value="Literatura">Literatura</option>
+            <option value="Matemáticas">Matemáticas</option>
+            <option value="Música">Música</option>
+            <option value="Psicología">Psicología</option>
+            <option value="Química">Química</option>
+            <option value="Sociología">Sociología</option>
+            <option value="Tecnología">Tecnología</option>
+          </select>
+        </div>
+        <div class="input-with-icon">
+          <img src="{{ url_for('static', filename='images-icons/autor.png') }}" alt="Icono Autor" class="input-icon">
+          <input type="text" id="archivo-autor" placeholder="Introduce el autor...">
+        </div>
+      </div>
+
+      <div class="archivo-input-file">
+        <label for="archivo-input" class="archivo-label">Seleccionar archivo</label>
+        <input type="file" id="archivo-input" accept=".txt,.docx">
+      </div>
+    </div>
+
+    <!-- Botón fuera del borde -->
+    <div class="archivo-btn-container">
+      <button class="round-btn" id="enviar-archivo-btn" title="Subir archivo">
+        <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Subir">
+      </button>
+    </div>
+  </div>
+</div>
+           
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
