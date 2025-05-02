@@ -45,6 +45,11 @@
           <button id="view-themes-btn" title="Temas">
             <img src="{{ url_for('static', filename='images-icons/temas.png') }}" alt="Temas">
           </button>
+          <button id="view-rag-btn" title="Estado RAG">
+            <img src="{{ url_for('static', filename='images-icons/embedding.png') }}"
+                  alt="Estado RAG"
+                  style="width: 80px; height: 80px;">
+          </button>
         </div>
       </div>
 
@@ -124,9 +129,7 @@
             </button>
           </div>
         </div>
-
       </div> <!-- cierre de content -->
-
     </div> <!-- cierre de container -->
   </main>
 
@@ -139,7 +142,10 @@
   </footer>
   <!-- ALERTA PERSONALIZADA -->
   <div id="custom-alert" class="custom-alert hidden">
-    <h3>🧠 Fausto dice...</h3>
+    <div class="alert-header">
+      <img src="{{ url_for('static', filename='images-icons/fausto.png') }}" alt="Fausto" class="alert-logo">
+      <h3>Fausto dice...</h3>
+    </div>
     <p id="alert-text"></p>
     <button id="cerrar-alerta-btn">Aceptar</button>  
   </div>
@@ -152,19 +158,20 @@
     <table class="document-table">
       <thead>
         <tr>
-          <th style="width: 30%;">Fecha</th>
-          <th style="width: 70%;">Transcripción</th>
+          <th style="width: 16%;">Fecha</th>
+          <th style="width: 72%;">Transcripción</th>
+          <th style="width: 12%;">Acciones</th>
         </tr>
       </thead>
       <tbody id="tabla-historial">
         <!-- Aquí irán las transcripciones -->
       </tbody>
     </table>
+    <div id="paginacion-historial" class="paginacion"></div>
   </div>
 </div>
 
   <!-- MODAL DE DOCUMENTOS -->
-<!-- Modal de documentos -->
 <div id="modal-documentos" class="modal hidden">
   <div class="modal-content">
     <span id="cerrar-modal" class="close-modal">&times;</span>
@@ -175,15 +182,17 @@
     <table class="document-table">
       <thead>
         <tr>
-          <th id="th-tema">Tema <span class="flecha">⬍</span></th>
-          <th id="th-autor">Autor <span class="flecha">⬍</span></th>
-          <th>Texto</th>
+          <th style="width: 15%;">Tema <span class="flecha">⬍</span></th>
+          <th style="width: 20%;">Autor <span class="flecha">⬍</span></th>
+          <th style="width: 50%;">Texto</th>
+          <th style="width: 15%;">Acciones</th>
         </tr>
       </thead>
       <tbody id="tabla-conocimientos">
         <!-- Los datos se insertarán aquí -->
       </tbody>
     </table>
+    <div id="paginacion-documentos" class="paginacion"></div>
   </div>
 </div>
 
@@ -195,6 +204,41 @@
     <ul class="tema-lista" id="lista-temas">
       <!-- Se llenará dinámicamente -->
     </ul>
+  </div>
+</div>
+
+<!-- MODAL ESTADO RAG -->
+<div id="modal-rag" class="modal hidden">
+  <div class="modal-content">
+    <span id="cerrar-modal-rag" class="close-modal">&times;</span>
+    <h2>
+      <img src="{{ url_for('static', filename='images-icons/embedding.png') }}" alt="RAG" class="modal-icon"
+      style="width: 65px; height: 65px;">
+      Estado del RAG
+    </h2>
+
+    <table class="document-table" style="table-layout: fixed; width: 100%;">      
+      <thead>
+        <tr>
+          <th style="width: 10%;">ID</th>
+          <th style="width: 15%;">Tema</th>
+          <th style="width: 15%;">Autor</th>
+          <th style="width: 45%;">Texto</th>
+          <th style="width: 15%;">Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-rag">
+        <!-- Filas se insertan por JS -->
+      </tbody>
+    </table>
+    <div id="contenedor-embedding-btn" style="margin-top: 15px;">
+      <button id="ejecutar-embedding-btn" class="round-btn" title="Ejecutar Embedding">
+        <img src="{{ url_for('static', filename='images-icons/embedding.png') }}"
+             alt="Run Embedding"
+             class="icono-embedding">
+      </button>
+    </div>
+    <div id="paginacion-rag" class="paginacion"></div>
   </div>
 </div>
 
@@ -247,7 +291,6 @@
       </div>
     </div>
 
-    <!-- Botón fuera del borde -->
     <div class="archivo-btn-container">
       <button class="round-btn" id="enviar-archivo-btn" title="Subir archivo">
         <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Subir">

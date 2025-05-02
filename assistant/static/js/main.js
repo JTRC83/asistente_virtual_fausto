@@ -151,63 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
         filas.forEach(f => tabla.appendChild(f));
       }
   
-    // MODAL DOCUMENTOS
-    function abrirModal() {
-      document.getElementById("modal-documentos").classList.remove("hidden");
-    }
-  
-    function cerrarModal() {
-      document.getElementById("modal-documentos").classList.add("hidden");
-    }
-  
-    const viewDocsBtn = document.getElementById("view-docs-btn");
-    if (viewDocsBtn) {
-      viewDocsBtn.addEventListener("click", () => {
-        fetch("/obtener_conocimientos")
-          .then(res => res.json())
-          .then(data => {
-            const tbody = document.getElementById("tabla-conocimientos");
-            if (tbody) {
-              tbody.innerHTML = "";
-              data.forEach(doc => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                  <td>${doc.tema}</td>
-                  <td>${doc.autor}</td>
-                  <td>${doc.texto}</td>
-                `;
-                tbody.appendChild(row);
-              });
-            }
-            const thTema = document.getElementById("th-tema");
-            const thAutor = document.getElementById("th-autor");
-
-            if (thTema && thAutor) {
-                thTema.addEventListener("click", () => ordenarTabla("tema", thTema));
-                thAutor.addEventListener("click", () => ordenarTabla("autor", thAutor));
-            }
-            abrirModal();
-          })
-          .catch(err => {
-            console.error("Error al obtener documentos:", err);
-          });
-      });
-    }
-  
-    const cerrarModalBtn = document.getElementById("cerrar-modal");
-    if (cerrarModalBtn) {
-      cerrarModalBtn.addEventListener("click", cerrarModal);
-    }
-
-    socket.on("confirmacion_transcripcion", (respuesta) => {
-        if (respuesta.status === "ok") {
-          mostrarAlertaPersonalizada("✅ Transcripción guardada correctamente 🚀");        
-        } else {
-          mostrarAlertaPersonalizada("❌ Error al guardar la transcripción.");
-        }
-      });
-  
-      // MODAL HISTORIAL
+    // MODAL HISTORIAL CON PAGINACIÓN Y VER MÁS / VER MENOS
 function abrirModalHistorial() {
     document.getElementById("modal-historial").classList.remove("hidden");
   }
@@ -222,18 +166,101 @@ function abrirModalHistorial() {
       fetch("/obtener_conversaciones")
         .then(res => res.json())
         .then(data => {
-          const tbody = document.getElementById("tabla-historial");
-          if (tbody) {
+          let currentPage = 1;
+          const itemsPerPage = 5;
+          const totalPages = Math.ceil(data.length / itemsPerPage);
+  
+          function renderPage(page) {
+            const tbody = document.getElementById("tabla-historial");
             tbody.innerHTML = "";
-            data.forEach(linea => {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = data.slice(start, end);
+  
+            pageItems.forEach(linea => {
               const row = document.createElement("tr");
+              const textoCorto = linea.texto.length > 300 ? linea.texto.substring(0, 300) + "..." : linea.texto;
+  
               row.innerHTML = `
                 <td>${linea.fecha}</td>
-                <td>${linea.texto}</td>
+                <td>
+                  <div id="texto-${linea.id}" class="transcripcion-truncada">${textoCorto}</div>
+                  ${linea.texto.length > 300 ? `
+                    <button class="btn-expandir round-btn" data-id="${linea.id}" data-full="${encodeURIComponent(linea.texto)}" title="Ver más">...</button>` : ""}
+                </td>
+                <td>
+                  <button class="round-btn btn-borrar-transcripcion" data-id="${linea.id}" title="Borrar">
+                    <img src="/static/images-icons/basura.png" alt="Borrar">
+                  </button>
+                </td>
               `;
               tbody.appendChild(row);
             });
+  
+            // Botones ver más / menos
+            document.querySelectorAll(".btn-expandir").forEach(btn => {
+              btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-id");
+                const div = document.getElementById(`texto-${id}`);
+                const isExpanded = btn.getAttribute("data-expanded") === "true";
+                if (isExpanded) {
+                  div.classList.add("transcripcion-truncada");
+                  div.textContent = decodeURIComponent(btn.getAttribute("data-full")).substring(0, 300) + "...";
+                  btn.textContent = "...";
+                  btn.setAttribute("data-expanded", "false");
+                } else {
+                  div.classList.remove("transcripcion-truncada");
+                  div.textContent = decodeURIComponent(btn.getAttribute("data-full"));
+                  btn.textContent = "▲"; // Flecha arriba
+                  btn.setAttribute("data-expanded", "true");
+                }
+              });
+            });
+  
+            // Botones borrar
+            document.querySelectorAll(".btn-borrar-transcripcion").forEach(btn => {
+              btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-id");
+                fetch(`/borrar_transcripcion/${id}`, { method: "DELETE" })
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.status === "ok") {
+                      mostrarAlertaPersonalizada("✅ Transcripción eliminada 🗑️");
+                      renderPage(currentPage);
+                    } else {
+                      mostrarAlertaPersonalizada("❌ Error al borrar transcripción");
+                    }
+                  })
+                  .catch(err => {
+                    console.error("Error al borrar:", err);
+                    mostrarAlertaPersonalizada("❌ Error inesperado al borrar");
+                  });
+              });
+            });
+  
+            // Controles de paginación
+            const controls = document.getElementById("paginacion-historial");            
+            controls.innerHTML = `
+              <button ${page === 1 ? "disabled" : ""} id="prev-page">Anterior</button>
+              <span>Página ${page} de ${totalPages}</span>
+              <button ${page === totalPages ? "disabled" : ""} id="next-page">Siguiente</button>
+            `;
+  
+            document.getElementById("prev-page").onclick = () => {
+              if (currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+              }
+            };
+            document.getElementById("next-page").onclick = () => {
+              if (currentPage < totalPages) {
+                currentPage++;
+                renderPage(currentPage);
+              }
+            };
           }
+  
+          renderPage(currentPage);
           abrirModalHistorial();
         })
         .catch(err => {
@@ -247,7 +274,173 @@ function abrirModalHistorial() {
     cerrarHistorialBtn.addEventListener("click", cerrarModalHistorial);
   }
 
-  // MODAL TEMAS
+
+// MODAL DOCUMENTOS con paginación y acciones ---------------------
+function abrirModalDocumentos() {
+    document.getElementById("modal-documentos").classList.remove("hidden");
+  }
+  
+  function cerrarModalDocumentos() {
+    document.getElementById("modal-documentos").classList.add("hidden");
+  }
+  
+  const viewDocsBtn = document.getElementById("view-docs-btn");
+  if (viewDocsBtn) {
+    viewDocsBtn.addEventListener("click", () => {
+      fetch("/obtener_conocimientos")
+        .then(res => res.json())
+        .then(data => {
+          let currentPage = 1;
+          const itemsPerPage = 5;
+          const totalPages = Math.ceil(data.length / itemsPerPage);
+  
+          function renderPage(page) {
+            const tbody = document.getElementById("tabla-conocimientos");
+            tbody.innerHTML = "";
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = data.slice(start, end);
+  
+            pageItems.forEach((doc, index) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${doc.tema}</td>
+                <td>${doc.autor}</td>
+                <td>${doc.texto}</td>
+                <td>
+                  <div class="acciones-container">
+                    <button class="round-btn btn-editar" data-id="${doc.id}" title="Editar">
+                      <img src="/static/images-icons/editar.png" alt="Editar">
+                    </button>
+                    <button class="round-btn btn-borrar-doc" data-index="${index}" title="Borrar">
+                      <img src="/static/images-icons/basura.png" alt="Borrar">
+                    </button>
+                  </div>
+                </td>
+              `;
+              tbody.appendChild(row);
+            });
+  
+            document.querySelectorAll(".btn-borrar-doc").forEach(btn => {
+              btn.addEventListener("click", () => {
+                const index = parseInt(btn.getAttribute("data-index"));
+                const { tema, autor, texto } = data[index];
+  
+                fetch("/borrar_conocimiento", {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ tema, autor, texto })
+                })
+                  .then(res => res.json())
+                  .then(r => {
+                    if (r.status === "ok") {
+                      mostrarAlertaPersonalizada("✅ Documento eliminado 🗑️");
+                      data.splice(index, 1);
+                      renderPage(currentPage);
+                    } else {
+                      mostrarAlertaPersonalizada("❌ Error al eliminar");
+                    }
+                  });
+              });
+            });
+  
+            document.querySelectorAll(".btn-editar").forEach(btn => {
+              btn.addEventListener("click", () => {
+                const row = btn.closest("tr");
+                const index = Array.from(row.parentNode.children).indexOf(row);
+  
+                const temaCell = row.children[0];
+                const autorCell = row.children[1];
+                const textoCell = row.children[2];
+                const accionesCell = row.children[3];
+  
+                const temaOriginal = temaCell.textContent.trim();
+                const autorOriginal = autorCell.textContent.trim();
+                const textoOriginal = textoCell.textContent.trim();
+  
+                temaCell.innerHTML = `<input type="text" value="${temaOriginal}" class="input-editar">`;
+                autorCell.innerHTML = `<input type="text" value="${autorOriginal}" class="input-editar">`;
+                textoCell.innerHTML = `<textarea class="input-editar" style="width: 100%; height: 140px">${textoOriginal}</textarea>`;
+                accionesCell.innerHTML = `
+                    <div class="acciones-container">
+                        <button class="round-btn btn-guardar" title="Guardar">
+                        <img src="/static/images-icons/guardar.png" alt="Guardar" style="width: 45px; height: 45px;">
+                        </button>
+                    </div>
+                    `;
+  
+                accionesCell.querySelector(".btn-guardar").addEventListener("click", () => {
+                  const nuevoTema = temaCell.querySelector("input").value;
+                  const nuevoAutor = autorCell.querySelector("input").value;
+                  const nuevoTexto = textoCell.querySelector("textarea").value;
+  
+                  fetch("/editar_conocimiento", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      tema: nuevoTema,
+                      autor: nuevoAutor,
+                      texto: nuevoTexto,
+                      original: {
+                        tema: temaOriginal,
+                        autor: autorOriginal,
+                        texto: textoOriginal
+                      }
+                    })
+                  })
+                    .then(res => res.json())
+                    .then(r => {
+                      if (r.status === "ok") {
+                        mostrarAlertaPersonalizada("✅ Documento actualizado correctamente ✏️");
+                        data[index] = {
+                          id: data[index].id,
+                          tema: nuevoTema,
+                          autor: nuevoAutor,
+                          texto: nuevoTexto
+                        };
+                        renderPage(currentPage);
+                      } else {
+                        mostrarAlertaPersonalizada("❌ Error al guardar");
+                      }
+                    });
+                });
+              });
+            });
+  
+            const controls = document.getElementById("paginacion-documentos");
+            controls.innerHTML = `
+              <button ${page === 1 ? "disabled" : ""} id="prev-doc">Anterior</button>
+              <span>Página ${page} de ${totalPages}</span>
+              <button ${page === totalPages ? "disabled" : ""} id="next-doc">Siguiente</button>
+            `;
+  
+            document.getElementById("prev-doc").onclick = () => {
+              if (currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+              }
+            };
+  
+            document.getElementById("next-doc").onclick = () => {
+              if (currentPage < totalPages) {
+                currentPage++;
+                renderPage(currentPage);
+              }
+            };
+          }
+  
+          renderPage(currentPage);
+          abrirModalDocumentos();
+        });
+    });
+  }
+  
+  const cerrarModalDocsBtn = document.getElementById("cerrar-modal");
+  if (cerrarModalDocsBtn) {
+    cerrarModalDocsBtn.addEventListener("click", cerrarModalDocumentos);
+  }
+
+  // MODAL TEMAS ---------------------------
 function abrirModalTemas() {
     document.getElementById("modal-temas").classList.remove("hidden");
   }
@@ -336,3 +529,115 @@ function abrirModalTemas() {
       modal.classList.add("hidden");
     }
   }
+
+ // ✅ Función para mostrar alerta personalizada
+function mostrarAlertaPersonalizada(mensaje) {
+    const alertDiv = document.getElementById("custom-alert");
+    const texto = document.getElementById("alert-text");
+    if (alertDiv && texto) {
+      texto.textContent = mensaje;
+      alertDiv.classList.remove("hidden");
+    }
+  }
+  
+  // ✅ Modal RAG -------------------------------------------------
+  function abrirModalRAG() {
+    document.getElementById("modal-rag").classList.remove("hidden");
+  }
+  
+  function cerrarModalRAG() {
+    document.getElementById("modal-rag").classList.add("hidden");
+  }
+  
+  document.getElementById("cerrar-modal-rag").addEventListener("click", cerrarModalRAG);
+  
+  document.getElementById("view-rag-btn").addEventListener("click", () => {
+    fetch("/estado_rag")
+      .then(res => res.json())
+      .then(data => {
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        const totalPages = Math.ceil(data.length / itemsPerPage);
+  
+        function renderPage(page) {
+          const tbody = document.getElementById("tabla-rag");
+          tbody.innerHTML = "";
+          const start = (page - 1) * itemsPerPage;
+          const end = start + itemsPerPage;
+          const items = data.slice(start, end);
+  
+          let hayPendientes = false;
+  
+          items.forEach(item => {
+            if (item.procesado === 0) hayPendientes = true; 
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${item.id}</td>
+              <td>${item.tema}</td>
+              <td>${item.autor}</td>
+              <td>${item.texto.split(" ").slice(0, 12).join(" ")}...</td>
+              <td style="text-align: center; font-size: 18px;">
+                ${item.procesado === 1 ? "✅" : "❌"}
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+  
+          const btn = document.getElementById("ejecutar-embedding-btn");
+          btn.style.display = "inline-block";
+  
+          const paginacion = document.getElementById("paginacion-rag");
+          paginacion.innerHTML = `
+            <button ${page === 1 ? "disabled" : ""} id="prev-rag">Anterior</button>
+            <span>Página ${page} de ${totalPages}</span>
+            <button ${page === totalPages ? "disabled" : ""} id="next-rag">Siguiente</button>
+          `;
+  
+          document.getElementById("prev-rag").onclick = () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderPage(currentPage);
+            }
+          };
+  
+          document.getElementById("next-rag").onclick = () => {
+            if (currentPage < totalPages) {
+              currentPage++;
+              renderPage(currentPage);
+            }
+          };
+        }
+  
+        renderPage(currentPage);
+        abrirModalRAG();
+      })
+      .catch(err => {
+        console.error("Error al cargar estado RAG:", err);
+        mostrarAlertaPersonalizada("❌ Error al cargar estado RAG");
+      });
+  });
+  
+  // ✅ Ejecutar Embeddings
+  const btn = document.getElementById("ejecutar-embedding-btn");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      fetch("/ejecutar_embeddings", { method: "POST" })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "ok") {
+            mostrarAlertaPersonalizada("✅ " + data.mensaje);
+            document.getElementById("view-rag-btn").click(); // Refresca el modal
+          } else {
+            mostrarAlertaPersonalizada("❌ " + data.mensaje);
+          }
+        })
+        .catch(err => {
+          console.error("Error al generar embeddings:", err);
+          mostrarAlertaPersonalizada("❌ Error inesperado al generar embeddings");
+        });
+    });
+  }
+
+
+
+
