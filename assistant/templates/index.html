@@ -73,6 +73,9 @@
             <button class="round-btn" id="to-pdf-btn" title="Exportar PDF">
               <img src="{{ url_for('static', filename='images-icons/pdf.png') }}" alt="PDF">
             </button>
+            <button id="reset-transcription-btn" class="round-btn" title="Resetear">
+              <img src="/static/images-icons/reset.png" alt="Reset" style="width: 45px; height: 45px;">
+            </button>
           </div>
         </div>
 
@@ -129,8 +132,8 @@
             </button>
           </div>
         </div>
-      </div> <!-- cierre de content -->
-    </div> <!-- cierre de container -->
+      </div> 
+    </div> 
   </main>
 
   <!-- FOOTER -->
@@ -182,8 +185,8 @@
     <table class="document-table">
       <thead>
         <tr>
-          <th style="width: 15%;">Tema <span class="flecha">⬍</span></th>
-          <th style="width: 20%;">Autor <span class="flecha">⬍</span></th>
+          <th id="ordenar-tema" style="width: 15%; cursor: pointer;">Tema <span class="flecha">⬍</span></th>
+          <th id="ordenar-autor" style="width: 20%; cursor: pointer;">Autor <span class="flecha">⬍</span></th>
           <th style="width: 50%;">Texto</th>
           <th style="width: 15%;">Acciones</th>
         </tr>
@@ -295,6 +298,16 @@
       <button class="round-btn" id="enviar-archivo-btn" title="Subir archivo">
         <img src="{{ url_for('static', filename='images-icons/enviar.png') }}" alt="Subir">
       </button>
+    </div>
+  </div>
+</div>
+
+<div id="confirm-modal" class="custom-modal hidden">
+  <div class="custom-modal-content">
+    <p id="confirm-modal-text">¿Estás seguro de que deseas borrar esto?</p>
+    <div class="custom-modal-actions">
+      <button id="confirm-yes-btn" class="btn-confirm">Sí</button>
+      <button id="confirm-no-btn" class="btn-cancel">Cancelar</button>
     </div>
   </div>
 </div>

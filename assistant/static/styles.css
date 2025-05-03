@@ -464,7 +464,7 @@ body.dark-mode input::placeholder {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.6);
-  z-index: 9999;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -520,8 +520,14 @@ body.dark-mode input::placeholder {
   width: 30px;
   height: 30px;
   font-size: 20px;
-  line-height: 1;
+  line-height: 30px;
+  text-align: center;
   padding: 0;
+  color: white; /* o negro si el fondo es claro */
+  background-color: #e82f1a;
+  border-radius: 50%;
+  border: none;
+  font-weight: bold;
 }
 
 .transcripcion-truncada {
@@ -904,3 +910,54 @@ body.dark-mode .modal-content .close-modal {
   object-fit: contain;
   margin: auto;
 }
+
+/* Alerta de borrado */
+.custom-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 20000;
+}
+
+.custom-modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 300px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  border: 2px solid #e82f1a;
+  color: #333;
+  font-size: 14px;
+}
+
+.custom-modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.btn-confirm {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.hidden {
+  display: none;
+}
+
+

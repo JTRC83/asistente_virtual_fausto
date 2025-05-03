@@ -68,6 +68,7 @@ def guardar_conocimiento(tema, autor, texto):
     conn.commit()
     conn.close()
 
+# Función para obtener todas las conversaciones guardadas
 def obtener_conversaciones():
     """Devuelve todas las conversaciones guardadas"""
     conn = sqlite3.connect(DATABASE_PATH)
@@ -77,15 +78,14 @@ def obtener_conversaciones():
     conn.close()
     return resultados
 
+# Función para obtener los conocimientos guardados
 def obtener_conocimientos():
-    """Devuelve todos los conocimientos guardados como lista de diccionarios"""
     conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row  # Permite acceder como diccionario
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('SELECT tema, autor, texto FROM conocimientos')
+    c.execute('SELECT id, tema, autor, texto FROM conocimientos')
     filas = c.fetchall()
     conn.close()
-
     return [dict(fila) for fila in filas]
 
 # Función para borrar una conversación

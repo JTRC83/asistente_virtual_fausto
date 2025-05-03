@@ -98,22 +98,6 @@ def borrar_transcripcion(id):
         print(f"❌ Error al borrar transcripción:", e)
         return jsonify({"status": "error"}), 500
     
-# Ruta para guardar un conocimiento
-@app.route("/borrar_conocimiento", methods=["DELETE"])
-def borrar_conocimiento_api():
-    data = request.get_json()
-    tema = data.get("tema")
-    autor = data.get("autor")
-    texto = data.get("texto")
-
-    from database.db_manager import borrar_conocimiento
-    try:
-        borrar_conocimiento(tema, autor, texto)
-        return jsonify({"status": "ok"})
-    except Exception as e:
-        print("[❌] Error al borrar conocimiento:", e)
-        return jsonify({"status": "error"})
-    
 # Ruta para editar un conocimiento
 @app.route("/editar_conocimiento", methods=["PUT"])
 def editar_conocimiento():
@@ -137,6 +121,21 @@ def editar_conocimiento():
     except Exception as e:
         print("[❌] Error al editar conocimiento:", e)
         return jsonify({"status": "error"})
+    
+# Ruta para borrar un conocimiento por ID
+@app.route("/borrar_conocimiento", methods=["DELETE"])
+def borrar_conocimiento_api():
+    data = request.get_json()
+    tema = data.get("tema")
+    autor = data.get("autor")
+    texto = data.get("texto")
+
+    try:
+        borrar_conocimiento(tema, autor, texto)
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        print("[❌] Error al borrar conocimiento:", e)
+        return jsonify({"status": "error"}), 500
 
 # Ruta para obtener el estado de los temas
 @app.route("/estado_temas")

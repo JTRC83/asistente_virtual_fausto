@@ -107,6 +107,17 @@ document.addEventListener("DOMContentLoaded", function () {
         mostrarAlertaPersonalizada("❌ Error al guardar la transcripción.");
       }
     });
+
+      // ✅ RESET DE TRANSCRIPCIÓN (sin alerta)
+      const resetBtn = document.getElementById("reset-transcription-btn");
+      if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+          const contenedor = document.getElementById("transcription-text");
+          if (contenedor) {
+            contenedor.innerHTML = "";
+          }
+        });
+      }
   
     // FUNCIONES ALERTA
     function mostrarAlertaPersonalizada(mensaje) {
@@ -152,80 +163,84 @@ document.addEventListener("DOMContentLoaded", function () {
       }
   
     // MODAL HISTORIAL CON PAGINACIÓN Y VER MÁS / VER MENOS
-function abrirModalHistorial() {
-    document.getElementById("modal-historial").classList.remove("hidden");
-  }
-  
-  function cerrarModalHistorial() {
-    document.getElementById("modal-historial").classList.add("hidden");
-  }
-  
-  const viewHistoryBtn = document.getElementById("view-history-btn");
-  if (viewHistoryBtn) {
-    viewHistoryBtn.addEventListener("click", () => {
-      fetch("/obtener_conversaciones")
-        .then(res => res.json())
-        .then(data => {
-          let currentPage = 1;
-          const itemsPerPage = 5;
-          const totalPages = Math.ceil(data.length / itemsPerPage);
-  
-          function renderPage(page) {
-            const tbody = document.getElementById("tabla-historial");
-            tbody.innerHTML = "";
-            const start = (page - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const pageItems = data.slice(start, end);
-  
-            pageItems.forEach(linea => {
-              const row = document.createElement("tr");
-              const textoCorto = linea.texto.length > 300 ? linea.texto.substring(0, 300) + "..." : linea.texto;
-  
-              row.innerHTML = `
-                <td>${linea.fecha}</td>
-                <td>
-                  <div id="texto-${linea.id}" class="transcripcion-truncada">${textoCorto}</div>
-                  ${linea.texto.length > 300 ? `
-                    <button class="btn-expandir round-btn" data-id="${linea.id}" data-full="${encodeURIComponent(linea.texto)}" title="Ver más">...</button>` : ""}
-                </td>
-                <td>
-                  <button class="round-btn btn-borrar-transcripcion" data-id="${linea.id}" title="Borrar">
-                    <img src="/static/images-icons/basura.png" alt="Borrar">
-                  </button>
-                </td>
-              `;
-              tbody.appendChild(row);
+    function abrirModalHistorial() {
+      document.getElementById("modal-historial").classList.remove("hidden");
+    }
+    
+    function cerrarModalHistorial() {
+      document.getElementById("modal-historial").classList.add("hidden");
+    }
+    
+    const viewHistoryBtn = document.getElementById("view-history-btn");
+if (viewHistoryBtn) {
+  viewHistoryBtn.addEventListener("click", () => {
+    fetch("/obtener_conversaciones")
+      .then(res => res.json())
+      .then(historial => {  // <-- usar un nombre distinto aquí
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        const totalPages = () => Math.ceil(historial.length / itemsPerPage);
+
+        function renderPage(page) {
+          const tbody = document.getElementById("tabla-historial");
+          tbody.innerHTML = "";
+          const start = (page - 1) * itemsPerPage;
+          const end = start + itemsPerPage;
+          const pageItems = historial.slice(start, end);
+
+          pageItems.forEach(linea => {
+            const row = document.createElement("tr");
+            const textoCorto = linea.texto.length > 300 ? linea.texto.substring(0, 300) + "..." : linea.texto;
+
+            row.innerHTML = `
+              <td>${linea.fecha}</td>
+              <td>
+                <div id="texto-${linea.id}" class="transcripcion-truncada">${textoCorto}</div>
+                ${linea.texto.length > 300 ? `
+                  <button class="btn-expandir round-btn" data-id="${linea.id}" data-full="${encodeURIComponent(linea.texto)}" title="Ver más">...</button>` : ""}
+              </td>
+              <td>
+                <button class="round-btn btn-borrar-transcripcion" data-id="${linea.id}" title="Borrar">
+                  <img src="/static/images-icons/basura.png" alt="Borrar">
+                </button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          // Botón ver más / ver menos
+          document.querySelectorAll(".btn-expandir").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = btn.getAttribute("data-id");
+              const div = document.getElementById(`texto-${id}`);
+              const isExpanded = btn.getAttribute("data-expanded") === "true";
+              if (isExpanded) {
+                div.classList.add("transcripcion-truncada");
+                div.textContent = decodeURIComponent(btn.getAttribute("data-full")).substring(0, 300) + "...";
+                btn.textContent = "...";
+                btn.setAttribute("data-expanded", "false");
+              } else {
+                div.classList.remove("transcripcion-truncada");
+                div.textContent = decodeURIComponent(btn.getAttribute("data-full"));
+                btn.textContent = "▲";
+                btn.setAttribute("data-expanded", "true");
+              }
             });
-  
-            // Botones ver más / menos
-            document.querySelectorAll(".btn-expandir").forEach(btn => {
-              btn.addEventListener("click", () => {
-                const id = btn.getAttribute("data-id");
-                const div = document.getElementById(`texto-${id}`);
-                const isExpanded = btn.getAttribute("data-expanded") === "true";
-                if (isExpanded) {
-                  div.classList.add("transcripcion-truncada");
-                  div.textContent = decodeURIComponent(btn.getAttribute("data-full")).substring(0, 300) + "...";
-                  btn.textContent = "...";
-                  btn.setAttribute("data-expanded", "false");
-                } else {
-                  div.classList.remove("transcripcion-truncada");
-                  div.textContent = decodeURIComponent(btn.getAttribute("data-full"));
-                  btn.textContent = "▲"; // Flecha arriba
-                  btn.setAttribute("data-expanded", "true");
-                }
-              });
-            });
-  
-            // Botones borrar
-            document.querySelectorAll(".btn-borrar-transcripcion").forEach(btn => {
-              btn.addEventListener("click", () => {
-                const id = btn.getAttribute("data-id");
+          });
+
+          // Botón borrar con confirmación
+          document.querySelectorAll(".btn-borrar-transcripcion").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = parseInt(btn.getAttribute("data-id"));
+              mostrarConfirmacionPersonalizada("¿Estás seguro de que deseas borrar esta transcripción?", () => {
                 fetch(`/borrar_transcripcion/${id}`, { method: "DELETE" })
                   .then(res => res.json())
-                  .then(data => {
-                    if (data.status === "ok") {
+                  .then(response => {
+                    if (response.status === "ok") {
                       mostrarAlertaPersonalizada("✅ Transcripción eliminada 🗑️");
+                      const index = historial.findIndex(item => item.id === id);
+                      if (index !== -1) historial.splice(index, 1);
+                      if (currentPage > totalPages()) currentPage--;
                       renderPage(currentPage);
                     } else {
                       mostrarAlertaPersonalizada("❌ Error al borrar transcripción");
@@ -237,95 +252,164 @@ function abrirModalHistorial() {
                   });
               });
             });
-  
-            // Controles de paginación
-            const controls = document.getElementById("paginacion-historial");            
-            controls.innerHTML = `
-              <button ${page === 1 ? "disabled" : ""} id="prev-page">Anterior</button>
-              <span>Página ${page} de ${totalPages}</span>
-              <button ${page === totalPages ? "disabled" : ""} id="next-page">Siguiente</button>
-            `;
-  
-            document.getElementById("prev-page").onclick = () => {
-              if (currentPage > 1) {
-                currentPage--;
-                renderPage(currentPage);
-              }
-            };
-            document.getElementById("next-page").onclick = () => {
-              if (currentPage < totalPages) {
-                currentPage++;
-                renderPage(currentPage);
-              }
-            };
-          }
-  
-          renderPage(currentPage);
-          abrirModalHistorial();
-        })
-        .catch(err => {
-          console.error("Error al cargar historial:", err);
-        });
-    });
-  }
-  
-  const cerrarHistorialBtn = document.getElementById("cerrar-modal-historial");
-  if (cerrarHistorialBtn) {
-    cerrarHistorialBtn.addEventListener("click", cerrarModalHistorial);
-  }
+          });
 
+          // Paginación
+          const controls = document.getElementById("paginacion-historial");
+          controls.innerHTML = `
+            <button ${page === 1 ? "disabled" : ""} id="prev-page">Anterior</button>
+            <span>Página ${page} de ${totalPages()}</span>
+            <button ${page === totalPages() ? "disabled" : ""} id="next-page">Siguiente</button>
+          `;
+          document.getElementById("prev-page").onclick = () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderPage(currentPage);
+            }
+          };
+          document.getElementById("next-page").onclick = () => {
+            if (currentPage < totalPages()) {
+              currentPage++;
+              renderPage(currentPage);
+            }
+          };
+        }
 
-// MODAL DOCUMENTOS con paginación y acciones ---------------------
+        renderPage(currentPage);
+        abrirModalHistorial();
+      })
+      .catch(err => {
+        console.error("Error al cargar historial:", err);
+      });
+  });
+}
+    
+    const cerrarHistorialBtn = document.getElementById("cerrar-modal-historial");
+    if (cerrarHistorialBtn) {
+      cerrarHistorialBtn.addEventListener("click", cerrarModalHistorial);
+    }
+
+    // ✅ Función para mostrar alerta personalizada
+function mostrarAlertaPersonalizada(mensaje) {
+  const alertDiv = document.getElementById("custom-alert");
+  const texto = document.getElementById("alert-text");
+  if (alertDiv && texto) {
+    texto.textContent = mensaje;
+    alertDiv.classList.remove("hidden");
+  }
+}
+
+// ✅ Función para mostrar confirmación personalizada
+function mostrarConfirmacionPersonalizada(mensaje, accionConfirmada) {
+  const modal = document.getElementById("confirm-modal");
+  const texto = document.getElementById("confirm-modal-text");
+  const btnSi = document.getElementById("confirm-yes-btn");
+  const btnNo = document.getElementById("confirm-no-btn");
+
+  texto.textContent = mensaje;
+  modal.classList.remove("hidden");
+
+  // Clonar botón "Sí" para evitar múltiples listeners
+  const nuevoBtnSi = btnSi.cloneNode(true);
+  nuevoBtnSi.id = "confirm-yes-btn"; // Reasignar el ID
+  btnSi.parentNode.replaceChild(nuevoBtnSi, btnSi);
+
+  nuevoBtnSi.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    accionConfirmada();
+  });
+
+  btnNo.addEventListener("click", () => {
+    modal.classList.add("hidden");
+  });
+}
+
+// MODAL DOCUMENTOS con paginación y acciones -----------------------------------------
 function abrirModalDocumentos() {
-    document.getElementById("modal-documentos").classList.remove("hidden");
-  }
-  
-  function cerrarModalDocumentos() {
-    document.getElementById("modal-documentos").classList.add("hidden");
-  }
-  
-  const viewDocsBtn = document.getElementById("view-docs-btn");
-  if (viewDocsBtn) {
-    viewDocsBtn.addEventListener("click", () => {
-      fetch("/obtener_conocimientos")
-        .then(res => res.json())
-        .then(data => {
-          let currentPage = 1;
-          const itemsPerPage = 5;
-          const totalPages = Math.ceil(data.length / itemsPerPage);
-  
-          function renderPage(page) {
-            const tbody = document.getElementById("tabla-conocimientos");
-            tbody.innerHTML = "";
-            const start = (page - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const pageItems = data.slice(start, end);
-  
-            pageItems.forEach((doc, index) => {
-              const row = document.createElement("tr");
-              row.innerHTML = `
-                <td>${doc.tema}</td>
-                <td>${doc.autor}</td>
-                <td>${doc.texto}</td>
-                <td>
-                  <div class="acciones-container">
-                    <button class="round-btn btn-editar" data-id="${doc.id}" title="Editar">
-                      <img src="/static/images-icons/editar.png" alt="Editar">
-                    </button>
-                    <button class="round-btn btn-borrar-doc" data-index="${index}" title="Borrar">
-                      <img src="/static/images-icons/basura.png" alt="Borrar">
-                    </button>
-                  </div>
-                </td>
-              `;
-              tbody.appendChild(row);
+  document.getElementById("modal-documentos").classList.remove("hidden");
+}
+
+function cerrarModalDocumentos() {
+  document.getElementById("modal-documentos").classList.add("hidden");
+}
+
+const viewDocsBtn = document.getElementById("view-docs-btn");
+if (viewDocsBtn) {
+  viewDocsBtn.addEventListener("click", () => {
+    fetch("/obtener_conocimientos")
+      .then(res => res.json())
+      .then(data => {
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let ordenTemaAsc = true;
+        let ordenAutorAsc = true;
+
+        function renderPage(page) {
+          const tbody = document.getElementById("tabla-conocimientos");
+          tbody.innerHTML = "";
+          const start = (page - 1) * itemsPerPage;
+          const end = start + itemsPerPage;
+          const pageItems = data.slice(start, end);
+
+          pageItems.forEach((doc, index) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${doc.tema}</td>
+              <td>${doc.autor}</td>
+              <td>
+                <div id="texto-${doc.id}" class="transcripcion-truncada">${doc.texto}</div>
+                ${
+                  doc.texto.length > 300
+                    ? `<button class="round-btn btn-expandir" data-id="${doc.id}" data-full="${encodeURIComponent(doc.texto)}" data-expanded="false" title="Expandir">...</button>`
+                    : ""
+                }
+              </td>        
+              <td>
+                <div class="acciones-container">
+                  <button class="round-btn btn-editar" data-id="${doc.id}" title="Editar">
+                    <img src="/static/images-icons/editar.png" alt="Editar">
+                  </button>
+                  <button class="round-btn btn-borrar-doc"
+                          data-id="${doc.id}"
+                          data-tema="${encodeURIComponent(doc.tema)}"
+                          data-autor="${encodeURIComponent(doc.autor)}"
+                          data-texto="${encodeURIComponent(doc.texto)}"
+                          title="Borrar">
+                    <img src="/static/images-icons/basura.png" alt="Borrar">
+                  </button>
+                </div>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          // Botón ver más / ver menos
+          document.querySelectorAll(".btn-expandir").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = btn.getAttribute("data-id");
+              const div = document.getElementById(`texto-${id}`);
+              const isExpanded = btn.getAttribute("data-expanded") === "true";
+              if (isExpanded) {
+                div.classList.add("transcripcion-truncada");
+                btn.textContent = "...";                
+                btn.setAttribute("data-expanded", "false");
+                btn.setAttribute("title", "Expandir");
+              } else {
+                div.classList.remove("transcripcion-truncada");
+                btn.textContent = "▲";                
+                btn.setAttribute("data-expanded", "true");
+                btn.setAttribute("title", "Colapsar");
+              }
             });
-  
-            document.querySelectorAll(".btn-borrar-doc").forEach(btn => {
-              btn.addEventListener("click", () => {
-                const index = parseInt(btn.getAttribute("data-index"));
-                const { tema, autor, texto } = data[index];
-  
+          });
+
+          document.querySelectorAll(".btn-borrar-doc").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const tema = decodeURIComponent(btn.getAttribute("data-tema"));
+              const autor = decodeURIComponent(btn.getAttribute("data-autor"));
+              const texto = decodeURIComponent(btn.getAttribute("data-texto"));
+
+              mostrarConfirmacionPersonalizada("¿Estás seguro de que deseas borrar este documento?", () => {
                 fetch("/borrar_conocimiento", {
                   method: "DELETE",
                   headers: { "Content-Type": "application/json" },
@@ -335,110 +419,136 @@ function abrirModalDocumentos() {
                   .then(r => {
                     if (r.status === "ok") {
                       mostrarAlertaPersonalizada("✅ Documento eliminado 🗑️");
-                      data.splice(index, 1);
-                      renderPage(currentPage);
+
+                      fetch("/obtener_conocimientos")
+                        .then(res => res.json())
+                        .then(nuevaData => {
+                          data = nuevaData;
+                          const totalPages = Math.ceil(data.length / itemsPerPage);
+                          if (currentPage > totalPages) currentPage = totalPages;
+                          renderPage(currentPage);
+                        });
                     } else {
                       mostrarAlertaPersonalizada("❌ Error al eliminar");
+                    }
+                  })
+                  .catch(err => {
+                    console.error("Error al borrar:", err);
+                    mostrarAlertaPersonalizada("❌ Error inesperado al eliminar");
+                  });
+              });
+            });
+          });
+
+          document.querySelectorAll(".btn-editar").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const row = btn.closest("tr");
+              const index = Array.from(row.parentNode.children).indexOf(row);
+
+              const temaCell = row.children[0];
+              const autorCell = row.children[1];
+              const textoCell = row.children[2];
+              const accionesCell = row.children[3];
+
+              const temaOriginal = temaCell.textContent.trim();
+              const autorOriginal = autorCell.textContent.trim();
+              const textoOriginal = textoCell.textContent.trim();
+
+              temaCell.innerHTML = `<input type="text" value="${temaOriginal}" class="input-editar">`;
+              autorCell.innerHTML = `<input type="text" value="${autorOriginal}" class="input-editar">`;
+              textoCell.innerHTML = `<textarea class="input-editar" style="width: 100%; height: 140px">${textoOriginal}</textarea>`;
+              accionesCell.innerHTML = `
+                <div class="acciones-container">
+                  <button class="round-btn btn-guardar" title="Guardar">
+                    <img src="/static/images-icons/guardar.png" alt="Guardar" style="width: 45px; height: 45px;">
+                  </button>
+                </div>
+              `;
+
+              accionesCell.querySelector(".btn-guardar").addEventListener("click", () => {
+                const nuevoTema = temaCell.querySelector("input").value;
+                const nuevoAutor = autorCell.querySelector("input").value;
+                const nuevoTexto = textoCell.querySelector("textarea").value;
+
+                fetch("/editar_conocimiento", {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    tema: nuevoTema,
+                    autor: nuevoAutor,
+                    texto: nuevoTexto,
+                    original: {
+                      tema: temaOriginal,
+                      autor: autorOriginal,
+                      texto: textoOriginal
+                    }
+                  })
+                })
+                  .then(res => res.json())
+                  .then(r => {
+                    if (r.status === "ok") {
+                      mostrarAlertaPersonalizada("✅ Documento actualizado correctamente ✏️");
+                      data[index] = {
+                        id: data[index].id,
+                        tema: nuevoTema,
+                        autor: nuevoAutor,
+                        texto: nuevoTexto
+                      };
+                      renderPage(currentPage);
+                    } else {
+                      mostrarAlertaPersonalizada("❌ Error al guardar");
                     }
                   });
               });
             });
-  
-            document.querySelectorAll(".btn-editar").forEach(btn => {
-              btn.addEventListener("click", () => {
-                const row = btn.closest("tr");
-                const index = Array.from(row.parentNode.children).indexOf(row);
-  
-                const temaCell = row.children[0];
-                const autorCell = row.children[1];
-                const textoCell = row.children[2];
-                const accionesCell = row.children[3];
-  
-                const temaOriginal = temaCell.textContent.trim();
-                const autorOriginal = autorCell.textContent.trim();
-                const textoOriginal = textoCell.textContent.trim();
-  
-                temaCell.innerHTML = `<input type="text" value="${temaOriginal}" class="input-editar">`;
-                autorCell.innerHTML = `<input type="text" value="${autorOriginal}" class="input-editar">`;
-                textoCell.innerHTML = `<textarea class="input-editar" style="width: 100%; height: 140px">${textoOriginal}</textarea>`;
-                accionesCell.innerHTML = `
-                    <div class="acciones-container">
-                        <button class="round-btn btn-guardar" title="Guardar">
-                        <img src="/static/images-icons/guardar.png" alt="Guardar" style="width: 45px; height: 45px;">
-                        </button>
-                    </div>
-                    `;
-  
-                accionesCell.querySelector(".btn-guardar").addEventListener("click", () => {
-                  const nuevoTema = temaCell.querySelector("input").value;
-                  const nuevoAutor = autorCell.querySelector("input").value;
-                  const nuevoTexto = textoCell.querySelector("textarea").value;
-  
-                  fetch("/editar_conocimiento", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      tema: nuevoTema,
-                      autor: nuevoAutor,
-                      texto: nuevoTexto,
-                      original: {
-                        tema: temaOriginal,
-                        autor: autorOriginal,
-                        texto: textoOriginal
-                      }
-                    })
-                  })
-                    .then(res => res.json())
-                    .then(r => {
-                      if (r.status === "ok") {
-                        mostrarAlertaPersonalizada("✅ Documento actualizado correctamente ✏️");
-                        data[index] = {
-                          id: data[index].id,
-                          tema: nuevoTema,
-                          autor: nuevoAutor,
-                          texto: nuevoTexto
-                        };
-                        renderPage(currentPage);
-                      } else {
-                        mostrarAlertaPersonalizada("❌ Error al guardar");
-                      }
-                    });
-                });
-              });
-            });
-  
-            const controls = document.getElementById("paginacion-documentos");
-            controls.innerHTML = `
-              <button ${page === 1 ? "disabled" : ""} id="prev-doc">Anterior</button>
-              <span>Página ${page} de ${totalPages}</span>
-              <button ${page === totalPages ? "disabled" : ""} id="next-doc">Siguiente</button>
-            `;
-  
-            document.getElementById("prev-doc").onclick = () => {
-              if (currentPage > 1) {
-                currentPage--;
-                renderPage(currentPage);
-              }
-            };
-  
-            document.getElementById("next-doc").onclick = () => {
-              if (currentPage < totalPages) {
-                currentPage++;
-                renderPage(currentPage);
-              }
-            };
-          }
-  
-          renderPage(currentPage);
-          abrirModalDocumentos();
+          });
+
+          const controls = document.getElementById("paginacion-documentos");
+          const totalPages = Math.ceil(data.length / itemsPerPage);
+          controls.innerHTML = `
+            <button ${page === 1 ? "disabled" : ""} id="prev-doc">Anterior</button>
+            <span>Página ${page} de ${totalPages}</span>
+            <button ${page === totalPages ? "disabled" : ""} id="next-doc">Siguiente</button>
+          `;
+
+          document.getElementById("prev-doc").onclick = () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderPage(currentPage);
+            }
+          };
+
+          document.getElementById("next-doc").onclick = () => {
+            if (currentPage < totalPages) {
+              currentPage++;
+              renderPage(currentPage);
+            }
+          };
+        }
+
+        // Agregar listeners de ordenamiento
+        document.getElementById("ordenar-tema")?.addEventListener("click", () => {
+          data.sort((a, b) => ordenTemaAsc ? a.tema.localeCompare(b.tema) : b.tema.localeCompare(a.tema));
+          ordenTemaAsc = !ordenTemaAsc;
+          renderPage(1);
         });
-    });
-  }
-  
-  const cerrarModalDocsBtn = document.getElementById("cerrar-modal");
-  if (cerrarModalDocsBtn) {
-    cerrarModalDocsBtn.addEventListener("click", cerrarModalDocumentos);
-  }
+
+        document.getElementById("ordenar-autor")?.addEventListener("click", () => {
+          data.sort((a, b) => ordenAutorAsc ? a.autor.localeCompare(b.autor) : b.autor.localeCompare(a.autor));
+          ordenAutorAsc = !ordenAutorAsc;
+          renderPage(1);
+        });
+
+        renderPage(currentPage);
+        abrirModalDocumentos();
+      });
+  });
+}
+
+const cerrarModalDocsBtn = document.getElementById("cerrar-modal");
+if (cerrarModalDocsBtn) {
+  cerrarModalDocsBtn.addEventListener("click", cerrarModalDocumentos);
+}
 
   // MODAL TEMAS ---------------------------
 function abrirModalTemas() {
