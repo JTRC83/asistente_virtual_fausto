@@ -127,8 +127,8 @@
             <button class="round-btn" id="upload-file-btn" title="Cargar archivo">
               <img src="{{ url_for('static', filename='images-icons/subirarchivo.png') }}" alt="Archivo">
             </button>
-            <button class="round-btn" id="get-summary-btn" title="Obtener resumen">
-              <img src="{{ url_for('static', filename='images-icons/resumen.png') }}" alt="Resumen">
+            <button id="view-resumen-btn" class="round-btn" title="Obtener resumen">
+              <img src="/static/images-icons/resumen.png" alt="Resumen" style="width: 50px; height: 50px;">
             </button>
           </div>
         </div>
@@ -248,8 +248,8 @@
 <!-- MODAL DE CARGA DE ARCHIVO -->
 <div id="modal-archivo" class="modal hidden">
   <div class="modal-content archivo">
-        <span class="close-modal" onclick="cerrarModalArchivo()">&times;</span>
-    <h2>
+    <span id="cerrar-modal-archivo" class="close-modal">&times;</span>
+        <h2>
       <img src="{{ url_for('static', filename='images-icons/subirarchivo.png') }}" alt="Subir" class="modal-icon normal-icon">
       Cargar archivo
     </h2>
@@ -311,7 +311,50 @@
     </div>
   </div>
 </div>
-           
+
+<!-- MODAL RESUMEN -->
+<div id="modal-resumen" class="modal hidden">
+  <div class="modal-content modal-resumen">    
+    <span id="cerrar-modal-resumen" class="close-modal">&times;</span>
+    
+    <h2>
+      <img src="{{ url_for('static', filename='images-icons/resumen.png') }}" alt="Resumen" class="modal-icon" style="width: 40px; height: 40px;">
+      Obtener Resumen
+    </h2>
+
+    <!-- Zona de entrada -->
+    <div class="modal-box resumen-box">
+      <textarea id="texto-a-resumir" class="input-textarea" placeholder="Escribe o pega aquí el texto..."></textarea>
+    
+    <!-- Botones juntos -->
+      <div class="botones-resumen-row">
+        <div class="archivo-input-file">
+          <input type="file" id="archivo-a-resumir" accept=".txt,.docx">
+          <label for="archivo-a-resumir" class="archivo-label">Seleccionar archivo</label>
+        </div>
+
+        <button id="enviar-a-gemma" class="round-btn" title="Enviar">
+          <img src="/static/images-icons/enviar.png" alt="Enviar" style="width: 35px; height: 35px;">
+        </button>
+
+        <button id="reset-resumen-btn" class="round-btn" title="Resetear">
+          <img src="/static/images-icons/reset.png" alt="Reset" style="width: 45px; height: 45px;">
+        </button>
+      </div>
+      <br>
+      <hr>
+      <br>
+      <h3 class="alert-header">
+        <img src="/static/images-icons/resumen.png" class="alert-logo" alt="Resumen">
+        <span>Resumen Fausto:</span>
+      </h3>
+      <textarea id="resultado-resumen" class="input-textarea" readonly></textarea>
+    </div>
+        
+  <!-- Scripts --> 
+   <!-- Asegúrate de tener esta línea en tu HTML -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

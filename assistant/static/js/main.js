@@ -63,20 +63,20 @@ document.addEventListener("DOMContentLoaded", function () {
       audio.play();
     });
   
-    // ENVIAR CONOCIMIENTO
+  // ENVIAR CONOCIMIENTO ------------------------------------------------
     document.getElementById("send-knowledge-btn").addEventListener("click", () => {
       const tema = document.getElementById("theme-select").value;
       const autor = document.getElementById("author-input").value;
       const texto = document.getElementById("knowledge-text").value;
-  
+
       if (!tema || !autor || !texto) {
-        alert("Todos los campos deben estar rellenos.");
+        mostrarAlertaPersonalizada("❌ Por favor, completa todos los campos antes de enviar.");
         return;
       }
-  
+
       socket.emit("guardar_conocimiento", { tema, autor, texto });
     });
-  
+
     socket.on("confirmacion_guardado", (respuesta) => {
       if (respuesta.status === "ok") {
         mostrarAlertaPersonalizada("✅ Conocimiento guardado correctamente 🚀");
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   
-    // ✅ GUARDAR TRANSCRIPCIÓN
+    // ✅ GUARDAR TRANSCRIPCIÓN ----------------------------------------------------
     document.getElementById("save-transcription-btn").addEventListener("click", () => {
       const texto = document.getElementById("transcription-text").innerText.trim();
   
@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-      // ✅ RESET DE TRANSCRIPCIÓN (sin alerta)
+      // ✅ RESET DE TRANSCRIPCIÓN (sin alerta)--------------------------
       const resetBtn = document.getElementById("reset-transcription-btn");
       if (resetBtn) {
         resetBtn.addEventListener("click", () => {
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
         filas.forEach(f => tabla.appendChild(f));
       }
   
-    // MODAL HISTORIAL CON PAGINACIÓN Y VER MÁS / VER MENOS
+    // MODAL HISTORIAL CON PAGINACIÓN Y VER MÁS / VER MENOS ------------------------------------------
     function abrirModalHistorial() {
       document.getElementById("modal-historial").classList.remove("hidden");
     }
@@ -176,7 +176,7 @@ if (viewHistoryBtn) {
   viewHistoryBtn.addEventListener("click", () => {
     fetch("/obtener_conversaciones")
       .then(res => res.json())
-      .then(historial => {  // <-- usar un nombre distinto aquí
+      .then(historial => {  
         let currentPage = 1;
         const itemsPerPage = 5;
         const totalPages = () => Math.ceil(historial.length / itemsPerPage);
@@ -550,7 +550,7 @@ if (cerrarModalDocsBtn) {
   cerrarModalDocsBtn.addEventListener("click", cerrarModalDocumentos);
 }
 
-  // MODAL TEMAS ---------------------------
+  // MODAL TEMAS ---------------------------------------------------------
 function abrirModalTemas() {
     document.getElementById("modal-temas").classList.remove("hidden");
   }
@@ -585,60 +585,56 @@ function abrirModalTemas() {
   if (cerrarTemasBtn) {
     cerrarTemasBtn.addEventListener("click", cerrarModalTemas);
   }
-    // MODAL ARCHIVO
-  function abrirModalArchivo() {
-    document.getElementById("modal-archivo").classList.remove("hidden");
-  }
-  
-  function cerrarModalArchivo() {
-    document.getElementById("modal-archivo").classList.add("hidden");
-  }
-  
-  document.getElementById("upload-file-btn").addEventListener("click", abrirModalArchivo);
-  document.getElementById("enviar-archivo-btn").addEventListener("click", () => {
-    const tema = document.getElementById("archivo-tema").value;
-    const autor = document.getElementById("archivo-autor").value;
-    const archivo = document.getElementById("archivo-input").files[0];
-  
-    if (!tema || !autor || !archivo) {
-      alert("Por favor completa todos los campos y selecciona un archivo.");
-      return;
-    }
-  
-    const formData = new FormData();
-    formData.append("archivo", archivo);
-    formData.append("tema", tema);
-    formData.append("autor", autor);
-  
-    fetch("/cargar_archivo", {
-      method: "POST",
-      body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === "ok") {
-        mostrarAlertaPersonalizada("✅ Archivo procesado y guardado 🚀");
-        cerrarModalArchivo();
-      } else {
-        mostrarAlertaPersonalizada("❌ Error al procesar el archivo");
-      }
-    })
-    .catch(err => {
-      console.error("Error al subir el archivo:", err);
-      mostrarAlertaPersonalizada("❌ Error inesperado al subir");
-    });
-  });
-    // OTROS BOTONES
-    document.getElementById('get-summary-btn').onclick = () => alert("Resumen pendiente");
-    
-  });
 
-  function cerrarModalArchivo() {
-    const modal = document.getElementById("modal-archivo");
-    if (modal) {
-      modal.classList.add("hidden");
-    }
+// MODAL ARCHIVO -----------------------------------------------
+function abrirModalArchivo() {
+  document.getElementById("modal-archivo").classList.remove("hidden");
+}
+
+function cerrarModalArchivo() {
+  const modal = document.getElementById("modal-archivo");
+  if (modal) {
+    modal.classList.add("hidden");
   }
+}
+
+document.getElementById("cerrar-modal-archivo")?.addEventListener("click", cerrarModalArchivo);
+
+document.getElementById("upload-file-btn").addEventListener("click", abrirModalArchivo);
+
+document.getElementById("enviar-archivo-btn").addEventListener("click", () => {
+  const tema = document.getElementById("archivo-tema").value;
+  const autor = document.getElementById("archivo-autor").value;
+  const archivo = document.getElementById("archivo-input").files[0];
+
+  if (!tema || !autor || !archivo) {
+    mostrarAlertaPersonalizada("❌ Por favor completa todos los campos y selecciona un archivo.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  formData.append("tema", tema);
+  formData.append("autor", autor);
+
+  fetch("/cargar_archivo", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === "ok") {
+      mostrarAlertaPersonalizada("✅ Archivo procesado y guardado 🚀");
+      cerrarModalArchivo();
+    } else {
+      mostrarAlertaPersonalizada("❌ Error al procesar el archivo");
+    }
+  })
+  .catch(err => {
+    console.error("Error al subir el archivo:", err);
+    mostrarAlertaPersonalizada("❌ Error inesperado al subir");
+  });
+});
 
  // ✅ Función para mostrar alerta personalizada
 function mostrarAlertaPersonalizada(mensaje) {
@@ -748,6 +744,214 @@ function mostrarAlertaPersonalizada(mensaje) {
     });
   }
 
+  // ✅ Exportar a PDF---------------------------------------------------------------
+  document.getElementById("to-pdf-btn").addEventListener("click", async () => {
+    const texto = document.getElementById("transcription-text").textContent.replace("Transcripción:", "").trim();
+    if (!texto) {
+      mostrarAlertaPersonalizada("❌ No hay texto para exportar");
+      return;
+    }
+  
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+  
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40; // MÁS margen lateral
+    const usableWidth = pageWidth - margin * 2;
+    let y = 60;
+  
+    // === LOGO EN BASE64 ===
+    const imgBase64 = await fetch("/static/images-icons/fausto.png")
+      .then(res => res.blob())
+      .then(blob => new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      }));
+  
+    // === HEADER CON DISEÑO REVISADO ===
+    const logoWidth = 85;
+    const logoHeight = 85;
+    const spacingLeft = 3;
+    const spacingRight = 3;
 
+    doc.setFontSize(22);
+doc.setFont("helvetica", "bold");
+const faustoWidth = doc.getTextWidth("Fausto");
 
+doc.setFont("helvetica", "normal");
+const aiWidth = doc.getTextWidth("AI");
 
+const totalWidth = faustoWidth + logoWidth + aiWidth + spacingLeft + spacingRight;
+const startX = (pageWidth - totalWidth) / 2;
+
+// Fausto
+doc.setFont("helvetica", "bold");
+doc.setTextColor(0, 0, 0);
+doc.setFontSize(22);
+doc.text("Fausto", startX, y + 45); // centrado vertical respecto al logo
+
+// Logo
+doc.addImage(imgBase64, "PNG", startX + faustoWidth + spacingLeft, y, logoWidth, logoHeight);
+
+// AI
+doc.setFont("helvetica", "normal");
+doc.setFontSize(22);
+doc.setTextColor(100, 100, 100);
+doc.text("AI", startX + faustoWidth + spacingLeft + logoWidth + spacingRight, y + 45);
+  
+    // Fecha
+    const fecha = new Date().toLocaleDateString();
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Fecha: ${fecha}`, pageWidth - margin - 100, y + 10);
+  
+    y += logoHeight + 20;
+  
+    // === TÍTULO ===
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Transcripción", margin, y);
+    y += 25;
+  
+    // === CUERPO ===
+    const bloques = texto.split(/(Usuario:|Fausto:)/).filter(Boolean);
+    doc.setFontSize(12);
+  
+    for (let i = 0; i < bloques.length; i += 2) {
+      const quien = bloques[i].trim();
+      const contenido = bloques[i + 1] ? bloques[i + 1].trim() : "";
+  
+      if (y > 770) {
+        doc.addPage();
+        y = 60;
+      }
+  
+      if (quien === "Usuario:") {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 0, 180); // azul
+        doc.text("Usuario:", margin, y);
+        doc.setFont("helvetica", "normal");
+        const partes = doc.splitTextToSize(contenido, usableWidth - 50);
+        doc.setTextColor(0, 0, 180);
+        doc.text(partes, margin + 65, y);
+        y += partes.length * 16;
+      } else if (quien === "Fausto:") {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(180, 20, 30); // rojo borgoña
+        doc.text("Fausto:", margin, y);
+        doc.setFont("helvetica", "normal");
+        const partes = doc.splitTextToSize(contenido, usableWidth - 50);
+        doc.setTextColor(180, 20, 30);
+        doc.text(partes, margin + 60, y);
+        y += partes.length * 16;
+      } else {
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0);
+        const partes = doc.splitTextToSize(quien, usableWidth);
+        doc.text(partes, margin, y);
+        y += partes.length * 16;
+      }
+  
+      y += 10;
+    }
+  
+    // === PIE DE PÁGINA ===
+    if (y > 750) {
+      doc.addPage();
+      y = 770;
+    }
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(120);
+    doc.text("Generado por Fausto.AI – Asistente Virtual", margin, 800);
+  
+    doc.save("transcripcion_fausto.pdf");
+  });
+
+// MODAL RESUMEN -------------------------------------------------
+// Mostrar/ocultar el modal
+document.getElementById("view-resumen-btn")?.addEventListener("click", () => {
+  document.getElementById("modal-resumen").classList.remove("hidden");
+});
+document.getElementById("cerrar-modal-resumen")?.addEventListener("click", () => {
+  document.getElementById("modal-resumen").classList.add("hidden");
+});
+
+// Cargar archivo .txt o .docx
+document.getElementById("archivo-a-resumir")?.addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const extension = file.name.split('.').pop().toLowerCase();
+  const textarea = document.getElementById("texto-a-resumir");
+
+  if (!["txt", "docx"].includes(extension)) {
+    mostrarAlertaPersonalizada("❌ Solo se permiten archivos .txt o .docx");
+    event.target.value = ""; // Reset file input
+    return;
+  }
+
+  if (extension === "txt") {
+    const reader = new FileReader();
+    reader.onload = () => {
+      textarea.value = reader.result;
+    };
+    reader.readAsText(file);
+  } else {
+    // DOCX: enviamos al backend para extraer el texto
+    const formData = new FormData();
+    formData.append("archivo", file);
+
+    const res = await fetch("/leer_docx", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    if (data.status === "ok") {
+      textarea.value = data.texto;
+    } else {
+      mostrarAlertaPersonalizada("❌ No se pudo leer el archivo Word");
+    }
+  }
+});
+
+// Enviar texto a Gemma
+document.getElementById("enviar-a-gemma")?.addEventListener("click", () => {
+  const texto = document.getElementById("texto-a-resumir").value.trim();
+  const resultadoTextarea = document.getElementById("resultado-resumen");
+
+  if (!texto) {
+    mostrarAlertaPersonalizada("❌ Escribe o sube un texto antes de enviarlo");
+    return;
+  }
+
+  fetch("/resumir_texto", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ texto })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "ok") {
+        resultadoTextarea.value = `📝 Resumen:\n${data.resumen}\n\n💭 Reflexión:\n${data.reflexion}`;
+      } else {
+        mostrarAlertaPersonalizada("❌ Error al obtener resumen");
+      }
+    })
+    .catch(err => {
+      console.error("Error al conectar con Gemma:", err);
+      mostrarAlertaPersonalizada("❌ Error inesperado al conectar con Gemma");
+    });
+});
+
+// Resetear campos del modal
+document.getElementById("reset-resumen-btn")?.addEventListener("click", () => {
+  document.getElementById("texto-a-resumir").value = "";
+  document.getElementById("archivo-a-resumir").value = null;
+  document.getElementById("resultado-resumen").value = "";
+});
+
+});

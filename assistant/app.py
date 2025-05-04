@@ -161,6 +161,7 @@ def estado_temas():
         print(f"[❌] Error en /estado_temas:", e)
         return jsonify([]), 500
 
+
 # Ruta para obtener el estado de RAG    
 @app.route("/estado_rag")
 def estado_rag():
@@ -249,6 +250,68 @@ def cargar_archivo():
     except Exception as e:
         print("[❌] Error al procesar archivo:", e)
         return jsonify({"status": "error", "msg": str(e)}), 500
+    
+# Ruta para hacer resumen de texto o archivos
+@app.route('/resumir_texto', methods=['POST'])
+def resumir_texto():
+    data = request.get_json()
+    texto = data.get("texto", "").strip()
+
+    if not texto:
+        return jsonify({"status": "error", "message": "Texto vacío"}), 400
+
+    prompt = f"""
+Actúa como Fausto, un asistente reflexivo e inteligente. Resume de forma clara y concisa las ideas principales del siguiente texto. Luego añade una breve reflexión personal desde tu perspectiva como Fausto.
+
+Texto:
+\"\"\"{texto}\"\"\"
+
+Responde con el siguiente formato:
+
+Resumen:
+...
+
+Reflexión:
+...
+"""
+
+    try:
+        respuesta = query_gemma(prompt)
+
+        # Separar resumen y reflexión si Gemma responde correctamente
+        resumen = ""
+        reflexion = ""
+
+        if "Reflexión:" in respuesta:
+            partes = respuesta.split("Reflexión:", 1)
+            resumen = partes[0].replace("Resumen:", "").strip()
+            reflexion = partes[1].strip()
+        else:
+            resumen = respuesta.strip()
+
+        return jsonify({
+            "status": "ok",
+            "resumen": resumen,
+            "reflexion": reflexion
+        })
+
+    except Exception as e:
+        print("❌ Error en /resumir_texto:", e)
+        return jsonify({"status": "error", "message": "Fallo interno"}), 500
+    
+@app.route("/leer_docx", methods=["POST"])
+def leer_docx():
+    archivo = request.files.get("archivo")
+    if not archivo or not archivo.filename.endswith(".docx"):
+        return jsonify({"status": "error", "mensaje": "Archivo inválido"}), 400
+
+    try:
+        doc = docx.Document(archivo)
+        texto = "\n".join([p.text for p in doc.paragraphs])
+        return jsonify({"status": "ok", "texto": texto})
+    except Exception as e:
+        print("[❌] Error al leer DOCX:", e)
+        return jsonify({"status": "error", "mensaje": "No se pudo procesar el archivo"}), 500
 
 # Whisper
 model = whisper.load_model("base")

@@ -960,4 +960,52 @@ body.dark-mode .modal-content .close-modal {
   display: none;
 }
 
+.modal-box {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: center;
+}
 
+.input-textarea {
+  width: 100%;
+  height: 200px;
+  resize: vertical;
+  border: 1px dashed #999;
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 10px;
+  font-family: monospace;
+  box-sizing: border-box;
+}
+
+.btn-fondo-container {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+}
+
+
+.modal-resumen .input-textarea {
+  width: 100%;
+  height: 280px;
+  min-height: 280px;
+  resize: vertical;
+  border: 1px dashed #999;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 10px;
+  font-family: monospace;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  overflow-y: auto;
+}
+
+.botones-resumen-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 8px;
+}
