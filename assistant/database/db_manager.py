@@ -1,15 +1,19 @@
+# Importación de librerías estándar necesarias para manejo de BD, rutas, fechas y JSON
 import sqlite3
 from datetime import datetime
 import os
 import json
 
+# Ruta absoluta a la base de datos SQLite
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_PATH = os.path.join(CURRENT_DIR, 'fausto.db')
 
+# Inicializa la base de datos y crea las tablas si no existen
 def inicializar_base_de_datos():
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
+# Tabla para guardar transcripciones de voz
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS conversaciones (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,6 +22,7 @@ def inicializar_base_de_datos():
     )
     ''')
 
+# Tabla para almacenar documentos cargados por el usuario
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS conocimientos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,14 +31,14 @@ def inicializar_base_de_datos():
         texto TEXT NOT NULL
     )
     ''')
-
+# Añade columna de control de embeddings si no existe
     try:
         cursor.execute("ALTER TABLE conocimientos ADD COLUMN procesado INTEGER DEFAULT 0")
     except sqlite3.OperationalError as e:
         if "duplicate column name: procesado" not in str(e):
             raise
 
-    # ✔ Aquí fuera del except
+    # Tabla para almacenar los vectores de embeddings junto con su id de conocimiento
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS embeddings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,6 +52,7 @@ def inicializar_base_de_datos():
     conn.close()
 
 # Función para guardar una conversación
+# Guarda una transcripción de audio en la tabla conversaciones
 def guardar_conversacion(texto):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -56,6 +62,7 @@ def guardar_conversacion(texto):
     conn.close()
 
 # Función para guardar un conocimiento
+# Guarda un nuevo documento en la tabla conocimientos
 def guardar_conocimiento(tema, autor, texto):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -69,6 +76,7 @@ def guardar_conocimiento(tema, autor, texto):
     conn.close()
 
 # Función para obtener todas las conversaciones guardadas
+# Devuelve todas las conversaciones almacenadas
 def obtener_conversaciones():
     """Devuelve todas las conversaciones guardadas"""
     conn = sqlite3.connect(DATABASE_PATH)
@@ -79,6 +87,7 @@ def obtener_conversaciones():
     return resultados
 
 # Función para obtener los conocimientos guardados
+# Devuelve todos los conocimientos almacenados
 def obtener_conocimientos():
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
@@ -89,6 +98,7 @@ def obtener_conocimientos():
     return [dict(fila) for fila in filas]
 
 # Función para borrar una conversación
+# Borra una transcripción de la tabla conversaciones
 def borrar_transcripcion(id):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -97,6 +107,7 @@ def borrar_transcripcion(id):
     conn.close()
 
 # Función para borrar un conocimiento
+# Borra un conocimiento identificándolo por sus campos tema, autor y texto
 def borrar_conocimiento(tema, autor, texto):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -105,6 +116,7 @@ def borrar_conocimiento(tema, autor, texto):
     conn.close()
 
 # Función para editar un conocimiento
+# Permite modificar los campos de un conocimiento, identificándolo por sus valores antiguos
 def editar_conocimiento(tema_antiguo, autor_antiguo, texto_antiguo, nuevo_tema, nuevo_autor, nuevo_texto):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -117,6 +129,7 @@ def editar_conocimiento(tema_antiguo, autor_antiguo, texto_antiguo, nuevo_tema, 
     conn.close()
 
 # Función para obtener el estado de RAG
+# Devuelve todos los conocimientos junto a su estado de procesamiento (procesado o no)
 def obtener_estado_rag():
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
@@ -127,6 +140,8 @@ def obtener_estado_rag():
     return [dict(f) for f in filas]
 
 # Función para obtener los embeddings
+# Devuelve los embeddings junto con el texto original asociado
+# Se usa para hacer recuperación de contexto vía similitud de coseno
 def obtener_embeddings():
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row

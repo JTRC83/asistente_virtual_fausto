@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Fausto AI</title>
+  <!-------Inclusión de CSS y JS-------->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-------------------------------- HEADER ------------------------------------->
   <div class="header">
     <div class="header-left">
+      <!-------- Logo y toggle de tema ------>
       <h1>
         <span>Fausto</span>
         <img src="{{ url_for('static', filename='images-icons/fausto.png') }}" alt="Logo Fausto AI" class="header-logo">
@@ -29,11 +31,11 @@
     </div>
   </div>
 
-  <!-- CONTENIDO PRINCIPAL -->
+  <!------- CONTENIDO PRINCIPAL -------->
   <main class="main-container">
     <div class="container">
 
-      <!-- LEFT SIDEBAR -->
+      <!------------------------------------ LEFT SIDEBAR ------------------------------------->
       <div class="left-sidebar">
         <div class="sidebar-section">
           <button id="view-history-btn" title="Historial">
@@ -56,7 +58,7 @@
       <!-- CONTENT (2 CARDS) -->
       <div class="content">
 
-        <!-- CARD CONVERSACIÓN -->
+        <!------------------------------ CARD CONVERSACIÓN ------------------------------------------->
         <div class="card" id="conversation-card">
           <div class="mic-wave-container">
             <button class="conversation-btn" id="conversation-btn" title="Hablar/Detener">
@@ -79,7 +81,7 @@
           </div>
         </div>
 
-        <!-- CARD AÑADIR CONOCIMIENTO -->
+        <!-------------------------------- CARD AÑADIR CONOCIMIENTO ----------------------------------->
         <div class="card" id="knowledge-card">
           <h2>AÑADE CONOCIMIENTO ADICIONAL</h2>
           
@@ -136,14 +138,14 @@
     </div> 
   </main>
 
-  <!-- FOOTER -->
+  <!---------------------------------- FOOTER --------------------------------------------->
   <footer>
     <div class="footer-content">
       <p>© 2025 Fausto AI. Todos los derechos reservados.</p>
       <p>Diseñado por Joan Toni Ramon Crespí | Versión 1.0</p>
     </div>
   </footer>
-  <!-- ALERTA PERSONALIZADA -->
+  <!------------------------------ ALERTA PERSONALIZADA -------------------------------------->
   <div id="custom-alert" class="custom-alert hidden">
     <div class="alert-header">
       <img src="{{ url_for('static', filename='images-icons/fausto.png') }}" alt="Fausto" class="alert-logo">
@@ -153,7 +155,7 @@
     <button id="cerrar-alerta-btn">Aceptar</button>  
   </div>
 
-  <!-- MODAL HISTORIAL -->
+  <!------------------------------ MODAL HISTORIAL ------------------------------------------->
 <div id="modal-historial" class="modal hidden">
   <div class="modal-content">
     <span class="close-modal" id="cerrar-modal-historial">&times;</span>
@@ -174,7 +176,7 @@
   </div>
 </div>
 
-  <!-- MODAL DE DOCUMENTOS -->
+  <!------------------------------ MODAL DE DOCUMENTOS ------------------------------------->
 <div id="modal-documentos" class="modal hidden">
   <div class="modal-content">
     <span id="cerrar-modal" class="close-modal">&times;</span>
@@ -199,7 +201,7 @@
   </div>
 </div>
 
-<!-- MODAL TEMAS -->
+<!------------------------------- MODAL TEMAS ----------------------------------------------->
 <div id="modal-temas" class="modal hidden">
   <div class="modal-content">
     <span class="close-modal" id="cerrar-modal-temas">&times;</span>
@@ -210,7 +212,7 @@
   </div>
 </div>
 
-<!-- MODAL ESTADO RAG -->
+<!----------------------------- MODAL ESTADO RAG --------------------------------------------->
 <div id="modal-rag" class="modal hidden">
   <div class="modal-content">
     <span id="cerrar-modal-rag" class="close-modal">&times;</span>
@@ -245,7 +247,7 @@
   </div>
 </div>
 
-<!-- MODAL DE CARGA DE ARCHIVO -->
+<!---------------------------- MODAL DE CARGA DE ARCHIVO ------------------------------------------>
 <div id="modal-archivo" class="modal hidden">
   <div class="modal-content archivo">
     <span id="cerrar-modal-archivo" class="close-modal">&times;</span>
@@ -312,7 +314,7 @@
   </div>
 </div>
 
-<!-- MODAL RESUMEN -->
+<!--------------------------------- MODAL RESUMEN ------------------------------------------->
 <div id="modal-resumen" class="modal hidden">
   <div class="modal-content modal-resumen">    
     <span id="cerrar-modal-resumen" class="close-modal">&times;</span>
@@ -352,7 +354,6 @@
     </div>
         
   <!-- Scripts --> 
-   <!-- Asegúrate de tener esta línea en tu HTML -->
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

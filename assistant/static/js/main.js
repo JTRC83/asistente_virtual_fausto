@@ -7,18 +7,22 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   
-    // SOCKET Y MEDIARECORDER
+    // SOCKET Y MEDIARECORDER 🎙️ SOCKET.IO Y GRABACIÓN DE AUDIO (MediaRecorder)
     const socket = io();
     let mediaRecorder;
     const transcriptionText = document.getElementById("transcription-text");
     let audioChunks = [];
   
+    // Pide acceso al micrófono del usuario
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
         mediaRecorder = new MediaRecorder(stream);
+        // Captura los datos de audio mientras se graba
         mediaRecorder.ondataavailable = event => {
           if (event.data.size > 0) audioChunks.push(event.data);
         };
+
+        // Cuando se detiene la grabación, se empaqueta y se envía por socket
         mediaRecorder.onstop = () => {
           const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
           audioChunks = [];
@@ -27,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         };
   
+        // Configura el botón de grabación y su lógica de toggle
         const convoBtn = document.getElementById("conversation-btn");
         let recording = false;
   
@@ -42,22 +47,24 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         });
       });
-  
+
+    // 🔁 RESPUESTAS DEL SERVIDOR VÍA SOCKET.IO
     // SOCKET RESPUESTAS
+    // Muestra la transcripción parcial del usuario en el chat
     socket.on("transcription_partial", data => {
       const userLine = document.createElement("div");
       userLine.className = "user-text";
       userLine.innerHTML = `<strong>Usuario:</strong> ${data}`;
       transcriptionText.appendChild(userLine);
     });
-  
+    // Muestra la respuesta generada por Fausto
     socket.on("gemma_response", data => {
       const faustoLine = document.createElement("div");
       faustoLine.className = "fausto-text";
       faustoLine.innerHTML = `<strong>Fausto:</strong> ${data}`;
       transcriptionText.appendChild(faustoLine);
     });
-  
+    // Reproduce la respuesta generada por Fausto en formato de audio
     socket.on("gemma_voice", base64Audio => {
       const audio = new Audio("data:audio/wav;base64," + base64Audio);
       audio.play();
@@ -171,6 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("modal-historial").classList.add("hidden");
     }
     
+    // Botón para abrir el modal de historial
     const viewHistoryBtn = document.getElementById("view-history-btn");
 if (viewHistoryBtn) {
   viewHistoryBtn.addEventListener("click", () => {
@@ -333,6 +341,7 @@ function cerrarModalDocumentos() {
   document.getElementById("modal-documentos").classList.add("hidden");
 }
 
+// Botón para abrir el modal de documentos
 const viewDocsBtn = document.getElementById("view-docs-btn");
 if (viewDocsBtn) {
   viewDocsBtn.addEventListener("click", () => {
@@ -344,6 +353,7 @@ if (viewDocsBtn) {
         let ordenTemaAsc = true;
         let ordenAutorAsc = true;
 
+        // Ordenar por tema y autor
         function renderPage(page) {
           const tbody = document.getElementById("tabla-conocimientos");
           tbody.innerHTML = "";
@@ -403,12 +413,14 @@ if (viewDocsBtn) {
             });
           });
 
+          // Botón borrar con confirmación
           document.querySelectorAll(".btn-borrar-doc").forEach(btn => {
             btn.addEventListener("click", () => {
               const tema = decodeURIComponent(btn.getAttribute("data-tema"));
               const autor = decodeURIComponent(btn.getAttribute("data-autor"));
               const texto = decodeURIComponent(btn.getAttribute("data-texto"));
 
+              // Mostrar confirmación personalizada
               mostrarConfirmacionPersonalizada("¿Estás seguro de que deseas borrar este documento?", () => {
                 fetch("/borrar_conocimiento", {
                   method: "DELETE",
@@ -439,7 +451,7 @@ if (viewDocsBtn) {
               });
             });
           });
-
+          // Botón editar
           document.querySelectorAll(".btn-editar").forEach(btn => {
             btn.addEventListener("click", () => {
               const row = btn.closest("tr");
@@ -464,12 +476,13 @@ if (viewDocsBtn) {
                   </button>
                 </div>
               `;
-
+              // Botón guardar
               accionesCell.querySelector(".btn-guardar").addEventListener("click", () => {
                 const nuevoTema = temaCell.querySelector("input").value;
                 const nuevoAutor = autorCell.querySelector("input").value;
                 const nuevoTexto = textoCell.querySelector("textarea").value;
 
+                // Validar campos
                 fetch("/editar_conocimiento", {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
@@ -502,7 +515,7 @@ if (viewDocsBtn) {
               });
             });
           });
-
+          // Paginación
           const controls = document.getElementById("paginacion-documentos");
           const totalPages = Math.ceil(data.length / itemsPerPage);
           controls.innerHTML = `

@@ -56,11 +56,14 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-
+# Genera los embeddings de un texto usando SentenceTransformer
+# Devuelve una lista de floats lista para serializar
 def generar_embeddings(texto):
     embedding = modelo_embeddings.encode(texto)
     return embedding.tolist()  # Para que sea JSON serializable si lo necesitas
 
+# Recupera el contexto relevante para una consulta del usuario
+# Utiliza embeddings para encontrar los textos más similares
 def recuperar_contexto(texto_usuario, top_k=3):
     vector_usuario = modelo_embeddings.encode(texto_usuario)
     base = obtener_embeddings()
@@ -299,6 +302,7 @@ Reflexión:
         print("❌ Error en /resumir_texto:", e)
         return jsonify({"status": "error", "message": "Fallo interno"}), 500
     
+# Ruta para procesar y leer un archivo .docx enviado por el usuario
 @app.route("/leer_docx", methods=["POST"])
 def leer_docx():
     archivo = request.files.get("archivo")
@@ -319,7 +323,9 @@ model = whisper.load_model("base")
 # TTS español
 tts = TTS(model_name="tts_models/es/css10/vits", progress_bar=False, gpu=False)
 
+# Variable de control para identificar si es la primera consulta del usuario
 first_query = True
+# Historia base de Fausto que se utilizará al iniciar la conversación
 FAUSTO_STORY = (
     "Imagina que Fausto era un hombre muy inteligente, un sabio, pero se sentía un poco triste "
     "porque pensaba que no sabía lo suficiente del mundo. Quería experimentarlo todo y conocer "
@@ -364,6 +370,7 @@ def query_gemma(prompt):
     payload = json.dumps({"prompt": prompt_final})
 
     try:
+     # 🚀 Ejecución de la llamada a Gemma3 usando `ollama` por línea de comandos
         result = subprocess.run(
             ["ollama", "run", "gemma3"],
             input=payload,
@@ -375,17 +382,20 @@ def query_gemma(prompt):
     except subprocess.CalledProcessError as e:
         return f"Error en la consulta a Gemma 3: {e.stderr}"
 
+# Función para sintetizar voz a partir de un texto usando Coqui TTS
 def synthesize_text(text, output_file="response.wav"):
-    tts.tts_to_file(text=text, file_path=output_file, speed=1.2)
+    tts.tts_to_file(text=text, file_path=output_file, speed=1.2)  # Ajusta la velocidad de la voz
     with open(output_file, "rb") as f:
         audio_data = f.read()
     os.remove(output_file)
     return base64.b64encode(audio_data).decode("utf-8")
 
+# Ruta principal de la aplicación que carga la interfaz web
 @app.route("/")
 def index():
     return render_template("index.html")
 
+# Evento recibido desde el frontend: recibe un blob de audio grabado por el usuario
 @socketio.on('audio_blob')
 def on_audio_blob(data):
     temp_filename = "temp_audio.webm"
@@ -399,6 +409,7 @@ def on_audio_blob(data):
             word_timestamps=True,
             language="es"
         )
+        # Procesa las palabras para introducir pausas como puntuación
         transcription = ""
         previous_end = 0.0
         for seg in result.get("segments", []):
@@ -413,9 +424,13 @@ def on_audio_blob(data):
                 transcription += w["word"].strip() + " "
                 previous_end = w["end"]
 
+        # Envía la transcripción al frontend
         emit("transcription_partial", transcription)
+        # Consulta a Gemma (modelo LLM) con la transcripción del usuario
         gemma_response = query_gemma(transcription)
+        # Envía la respuesta de Gemma al frontend
         emit("gemma_response", gemma_response)
+        # Convierte la respuesta a voz y la envía como base64 al cliente
         synthesized_audio = synthesize_text(gemma_response)
         emit("gemma_voice", synthesized_audio)
 
@@ -425,6 +440,7 @@ def on_audio_blob(data):
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
 
+# Evento para guardar un conocimiento en la base de datos
 @socketio.on('guardar_conocimiento')
 def handle_guardar_conocimiento(data):
     try:
@@ -432,21 +448,26 @@ def handle_guardar_conocimiento(data):
         autor = data.get("autor")
         texto = data.get("texto")
 
+        # Evento para guardar un nuevo conocimiento en la base de datos
         guardar_conocimiento(tema, autor, texto)
         print(f"✔ Conocimiento guardado: Tema={tema}, Autor={autor}")
+        # Notifica al frontend que el guardado fue exitoso
         emit("confirmacion_guardado", {"status": "ok"})
     except Exception as e:
         print(f"[❌] Error al guardar conocimiento:", e)
         emit("confirmacion_guardado", {"status": "error"})
 
+# Evento para manejar la conexión del cliente
 @socketio.on('connect')
 def on_connect():
     print("Cliente conectado.")
 
+# Evento para manejar la desconexión del cliente
 @socketio.on('disconnect')
 def on_disconnect():
     print("Cliente desconectado.")
 
+# Evento para guardar una transcripción (conversación generada)
 @socketio.on('guardar_transcripcion')
 def handle_guardar_transcripcion(data):
     try:
@@ -458,5 +479,6 @@ def handle_guardar_transcripcion(data):
         print(f"[❌] Error al guardar transcripción:", e)
         emit("confirmacion_transcripcion", {"status": "error"})
 
+# Punto de entrada principal al ejecutar el script: inicia la app Flask con Socket.IO
 if __name__ == "__main__":
     socketio.run(app, debug=True, port=5000)
