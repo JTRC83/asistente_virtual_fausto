@@ -98,15 +98,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // ✅ GUARDAR TRANSCRIPCIÓN ----------------------------------------------------
     document.getElementById("save-transcription-btn").addEventListener("click", () => {
       const texto = document.getElementById("transcription-text").innerText.trim();
-  
-      if (!texto) {
-        alert("No hay ninguna transcripción para guardar.");
+
+      // 🔍 Eliminar el encabezado "Transcripción:" para verificar si hay contenido útil
+      const contenidoReal = texto.replace(/^Transcripción:\s*/i, "").trim();
+
+      if (!contenidoReal) {
+        mostrarAlertaPersonalizada("⚠️ No hay ninguna transcripción para guardar.");
         return;
       }
-  
+
       socket.emit("guardar_transcripcion", { texto });
     });
-  
+
     socket.on("confirmacion_transcripcion", (respuesta) => {
       if (respuesta.status === "ok") {
         mostrarAlertaPersonalizada("✅ Transcripción guardada correctamente 📝");
