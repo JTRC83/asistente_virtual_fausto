@@ -772,11 +772,11 @@ function mostrarAlertaPersonalizada(mensaje) {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
   
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 40; // MÁS margen lateral
+    const margin = 40;
     const usableWidth = pageWidth - margin * 2;
     let y = 60;
   
-    // === LOGO EN BASE64 ===
+    // Imagen en base64
     const imgBase64 = await fetch("/static/images-icons/fausto.png")
       .then(res => res.blob())
       .then(blob => new Promise(resolve => {
@@ -785,36 +785,27 @@ function mostrarAlertaPersonalizada(mensaje) {
         reader.readAsDataURL(blob);
       }));
   
-    // === HEADER CON DISEÑO REVISADO ===
-    const logoWidth = 85;
-    const logoHeight = 85;
-    const spacingLeft = 3;
-    const spacingRight = 3;
-
+    // Encabezado
+    const logoWidth = 85, logoHeight = 85, spacingLeft = 3, spacingRight = 3;
     doc.setFontSize(22);
-doc.setFont("helvetica", "bold");
-const faustoWidth = doc.getTextWidth("Fausto");
-
-doc.setFont("helvetica", "normal");
-const aiWidth = doc.getTextWidth("AI");
-
-const totalWidth = faustoWidth + logoWidth + aiWidth + spacingLeft + spacingRight;
-const startX = (pageWidth - totalWidth) / 2;
-
-// Fausto
-doc.setFont("helvetica", "bold");
-doc.setTextColor(0, 0, 0);
-doc.setFontSize(22);
-doc.text("Fausto", startX, y + 45); // centrado vertical respecto al logo
-
-// Logo
-doc.addImage(imgBase64, "PNG", startX + faustoWidth + spacingLeft, y, logoWidth, logoHeight);
-
-// AI
-doc.setFont("helvetica", "normal");
-doc.setFontSize(22);
-doc.setTextColor(100, 100, 100);
-doc.text("AI", startX + faustoWidth + spacingLeft + logoWidth + spacingRight, y + 45);
+    doc.setFont("helvetica", "bold");
+    const faustoWidth = doc.getTextWidth("Fausto");
+  
+    doc.setFont("helvetica", "normal");
+    const aiWidth = doc.getTextWidth("AI");
+  
+    const totalWidth = faustoWidth + logoWidth + aiWidth + spacingLeft + spacingRight;
+    const startX = (pageWidth - totalWidth) / 2;
+  
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("Fausto", startX, y + 45);
+  
+    doc.addImage(imgBase64, "PNG", startX + faustoWidth + spacingLeft, y, logoWidth, logoHeight);
+  
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text("AI", startX + faustoWidth + spacingLeft + logoWidth + spacingRight, y + 45);
   
     // Fecha
     const fecha = new Date().toLocaleDateString();
@@ -824,56 +815,54 @@ doc.text("AI", startX + faustoWidth + spacingLeft + logoWidth + spacingRight, y 
   
     y += logoHeight + 20;
   
-    // === TÍTULO ===
+    // Título
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
     doc.text("Transcripción", margin, y);
     y += 25;
   
-    // === CUERPO ===
+    // Contenido
     const bloques = texto.split(/(Usuario:|Fausto:)/).filter(Boolean);
     doc.setFontSize(12);
+    const lineHeight = 16;
+    const extraSpacing = 10;
   
     for (let i = 0; i < bloques.length; i += 2) {
       const quien = bloques[i].trim();
       const contenido = bloques[i + 1] ? bloques[i + 1].trim() : "";
+      const textParts = doc.splitTextToSize(contenido, usableWidth - 50);
+      const totalHeight = (textParts.length + 1) * lineHeight + extraSpacing;
   
-      if (y > 770) {
+      if (y + totalHeight > doc.internal.pageSize.getHeight() - margin) {
         doc.addPage();
-        y = 60;
+        y = margin;
       }
   
       if (quien === "Usuario:") {
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 0, 180); // azul
+        doc.setTextColor(0, 0, 180);
         doc.text("Usuario:", margin, y);
         doc.setFont("helvetica", "normal");
-        const partes = doc.splitTextToSize(contenido, usableWidth - 50);
         doc.setTextColor(0, 0, 180);
-        doc.text(partes, margin + 65, y);
-        y += partes.length * 16;
+        doc.text(textParts, margin + 65, y);
       } else if (quien === "Fausto:") {
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(180, 20, 30); // rojo borgoña
+        doc.setTextColor(180, 20, 30);
         doc.text("Fausto:", margin, y);
         doc.setFont("helvetica", "normal");
-        const partes = doc.splitTextToSize(contenido, usableWidth - 50);
         doc.setTextColor(180, 20, 30);
-        doc.text(partes, margin + 60, y);
-        y += partes.length * 16;
+        doc.text(textParts, margin + 60, y);
       } else {
         doc.setFont("helvetica", "normal");
         doc.setTextColor(0);
-        const partes = doc.splitTextToSize(quien, usableWidth);
-        doc.text(partes, margin, y);
-        y += partes.length * 16;
+        doc.text(textParts, margin, y);
       }
   
-      y += 10;
+      y += textParts.length * lineHeight + extraSpacing;
     }
   
-    // === PIE DE PÁGINA ===
+    // Pie de página
     if (y > 750) {
       doc.addPage();
       y = 770;
