@@ -38,6 +38,7 @@ from database.db_manager import (
     guardar_conversacion,
     inicializar_base_de_datos,
     obtener_embeddings,
+    buscar_por_autor_o_tema,
     DATABASE_PATH
 )
 
@@ -74,6 +75,20 @@ def recuperar_contexto(texto_usuario, top_k=3):
     
     top_indices = np.argsort(similitudes)[::-1][:top_k]
     return [textos[i] for i in top_indices]
+
+# Ruta para buscar por autor o tema
+@app.route('/buscar')
+def buscar():
+    termino = request.args.get('termino', '').strip()
+    if not termino:
+        return jsonify({"encontrado": False})
+
+    resultados, tipo = buscar_por_autor_o_tema(termino)
+    return jsonify({
+        "encontrado": bool(resultados),
+        "tipo": tipo,
+        "resultados": resultados
+    })
     
 # Ruta para obtener conocimientos
 @app.route("/obtener_conocimientos")
@@ -147,7 +162,7 @@ def estado_temas():
         todos_los_temas = [
             "Antropología", "Arte", "Astronomía", "Biología", "Ciencia", "Ciencias Políticas",
             "Economía", "Filosofía", "Física", "Genetica", "Historia", "Inteligencia Artificial",
-            "Literatura", "Matemáticas", "Música", "Psicología", "Química", "Sociología", "Tecnología"
+            "Literatura", "Matemáticas", "Música", "Psicología", "Química", "Religión", "Sociología", "Tecnología"
         ]
 
         conocimientos = obtener_conocimientos()  # Devuelve lista de dicts con clave 'tema'
@@ -263,6 +278,7 @@ def resumir_texto():
     if not texto:
         return jsonify({"status": "error", "message": "Texto vacío"}), 400
 
+
     prompt = f"""
 Actúa como Fausto, un asistente reflexivo e inteligente. Resume de forma clara y concisa las ideas principales del siguiente texto. Luego añade una breve reflexión personal desde tu perspectiva como Fausto.
 
@@ -301,6 +317,28 @@ Reflexión:
     except Exception as e:
         print("❌ Error en /resumir_texto:", e)
         return jsonify({"status": "error", "message": "Fallo interno"}), 500
+    
+# Ruta para generar audio del resumen
+@app.route("/generar_audio_resumen", methods=["POST"])
+def generar_audio_resumen():
+    data = request.get_json()
+    texto = data.get("texto", "").strip()
+
+    if not texto:
+        return jsonify({"status": "error", "mensaje": "Texto vacío"}), 400
+
+    try:
+        audio_base64 = synthesize_text(texto)
+        return jsonify({
+            "status": "ok",
+            "audio_base64": audio_base64
+        })
+    except Exception as e:
+        print("[❌] Error al generar audio del resumen:", e)
+        return jsonify({
+            "status": "error",
+            "mensaje": str(e)
+        }), 500
     
 # Ruta para procesar y leer un archivo .docx enviado por el usuario
 @app.route("/leer_docx", methods=["POST"])
@@ -384,7 +422,7 @@ def query_gemma(prompt):
 
 # Función para sintetizar voz a partir de un texto usando Coqui TTS
 def synthesize_text(text, output_file="response.wav"):
-    tts.tts_to_file(text=text, file_path=output_file, speed=1.2)  # Ajusta la velocidad de la voz
+    tts.tts_to_file(text=text, file_path=output_file, speed=1.3)  # Ajusta la velocidad de la voz
     with open(output_file, "rb") as f:
         audio_data = f.read()
     os.remove(output_file)
@@ -482,3 +520,4 @@ def handle_guardar_transcripcion(data):
 # Punto de entrada principal al ejecutar el script: inicia la app Flask con Socket.IO
 if __name__ == "__main__":
     socketio.run(app, debug=True, port=5000)
+

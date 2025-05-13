@@ -156,3 +156,26 @@ def obtener_embeddings():
 
     # Convertir JSON string a lista
     return [(json.loads(row["vector"]), row["texto"]) for row in resultados]
+
+# Busca en la base de datos conocimientos por autor o tema
+# Devuelve una lista de resultados y el tipo de búsqueda (tema o autor)
+def buscar_por_autor_o_tema(termino):
+    conn = sqlite3.connect('database/fausto.db')
+    cur = conn.cursor()
+
+    # Buscar por tema
+    cur.execute("SELECT autor, texto FROM conocimientos WHERE tema LIKE ?", ('%' + termino + '%',))
+    resultados_tema = [{"autor": r[0], "texto": r[1]} for r in cur.fetchall()]
+
+    if resultados_tema:
+        return resultados_tema, "tema"
+
+    # Buscar por autor
+    cur.execute("SELECT tema, texto FROM conocimientos WHERE autor LIKE ?", ('%' + termino + '%',))
+    resultados_autor = [{"tema": r[0], "texto": r[1]} for r in cur.fetchall()]
+    conn.close()
+
+    if resultados_autor:
+        return resultados_autor, "autor"
+
+    return [], None

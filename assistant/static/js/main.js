@@ -64,10 +64,39 @@ document.addEventListener("DOMContentLoaded", function () {
       faustoLine.innerHTML = `<strong>Fausto:</strong> ${data}`;
       transcriptionText.appendChild(faustoLine);
     });
-    // Reproduce la respuesta generada por Fausto en formato de audio
+    // Reproduce y guarda el audio generado por Fausto
     socket.on("gemma_voice", base64Audio => {
       const audio = new Audio("data:audio/wav;base64," + base64Audio);
+
+      // Pausa el audio anterior si lo hubiera
+      if (window.ttsAudio) {
+        window.ttsAudio.pause();
+        window.ttsAudio = null;
+      }
+
+      // Guarda el nuevo audio en variable global
+      window.ttsAudio = audio;
       audio.play();
+    });
+
+    let isMuted = false;
+    // Pausa o reanuda el audio al hacer clic en el botón
+    const stopBtn = document.getElementById("stop-voice-btn");
+    const stopIcon = stopBtn.querySelector("img");
+
+    stopBtn.addEventListener("click", () => {
+      const audio = window.ttsAudio;
+      if (!audio) return;
+
+      if (!isMuted) {
+        audio.pause();
+        stopIcon.src = "/static/images-icons/play.png";  // Mostrar ícono de "micro"
+        isMuted = true;
+      } else {
+        audio.play();
+        stopIcon.src = "/static/images-icons/stop.png";  // Volver al ícono original
+        isMuted = false;
+      }
     });
   
   // ENVIAR CONOCIMIENTO ------------------------------------------------
@@ -876,54 +905,55 @@ function mostrarAlertaPersonalizada(mensaje) {
   });
 
 // MODAL RESUMEN -------------------------------------------------
-// Mostrar/ocultar el modal
-document.getElementById("view-resumen-btn")?.addEventListener("click", () => {
-  document.getElementById("modal-resumen").classList.remove("hidden");
-});
-document.getElementById("cerrar-modal-resumen")?.addEventListener("click", () => {
-  document.getElementById("modal-resumen").classList.add("hidden");
-});
+  // Mostrar/ocultar el modal
+  document.getElementById("view-resumen-btn")?.addEventListener("click", () => {
+    document.getElementById("modal-resumen").classList.remove("hidden");
+  });
 
-// Cargar archivo .txt o .docx
-document.getElementById("archivo-a-resumir")?.addEventListener("change", async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+  document.getElementById("cerrar-modal-resumen")?.addEventListener("click", () => {
+    document.getElementById("modal-resumen").classList.add("hidden");
+  });
 
-  const extension = file.name.split('.').pop().toLowerCase();
-  const textarea = document.getElementById("texto-a-resumir");
+  // Cargar archivo .txt o .docx
+  document.getElementById("archivo-a-resumir")?.addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  if (!["txt", "docx"].includes(extension)) {
-    mostrarAlertaPersonalizada("❌ Solo se permiten archivos .txt o .docx");
-    event.target.value = ""; // Reset file input
-    return;
-  }
+    const extension = file.name.split('.').pop().toLowerCase();
+    const textarea = document.getElementById("texto-a-resumir");
 
-  if (extension === "txt") {
-    const reader = new FileReader();
-    reader.onload = () => {
-      textarea.value = reader.result;
-    };
-    reader.readAsText(file);
-  } else {
-    // DOCX: enviamos al backend para extraer el texto
-    const formData = new FormData();
-    formData.append("archivo", file);
-
-    const res = await fetch("/leer_docx", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-    if (data.status === "ok") {
-      textarea.value = data.texto;
-    } else {
-      mostrarAlertaPersonalizada("❌ No se pudo leer el archivo Word");
+    if (!["txt", "docx"].includes(extension)) {
+      mostrarAlertaPersonalizada("❌ Solo se permiten archivos .txt o .docx");
+      event.target.value = ""; // Reset file input
+      return;
     }
-  }
-});
 
-// Enviar texto a Gemma
+    if (extension === "txt") {
+      const reader = new FileReader();
+      reader.onload = () => {
+        textarea.value = reader.result;
+      };
+      reader.readAsText(file);
+    } else {
+      // DOCX: enviamos al backend para extraer el texto
+      const formData = new FormData();
+      formData.append("archivo", file);
+
+      const res = await fetch("/leer_docx", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.status === "ok") {
+        textarea.value = data.texto;
+      } else {
+        mostrarAlertaPersonalizada("❌ No se pudo leer el archivo Word");
+      }
+    }
+  });
+
+// Enviar texto a Gemma y reproducir resumen con voz
 document.getElementById("enviar-a-gemma")?.addEventListener("click", () => {
   const texto = document.getElementById("texto-a-resumir").value.trim();
   const resultadoTextarea = document.getElementById("resultado-resumen");
@@ -933,6 +963,9 @@ document.getElementById("enviar-a-gemma")?.addEventListener("click", () => {
     return;
   }
 
+  // ✅ Mostrar mensaje inmediato
+  mostrarAlertaPersonalizada("📤 Texto enviado correctamente. ✅ En unos segundos aparecerá el resumen...");
+
   fetch("/resumir_texto", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -941,7 +974,32 @@ document.getElementById("enviar-a-gemma")?.addEventListener("click", () => {
     .then(res => res.json())
     .then(data => {
       if (data.status === "ok") {
+        // ✅ Ocultar la alerta al recibir el resumen
+        document.getElementById("custom-alert")?.classList.add("hidden");
+
         resultadoTextarea.value = `📝 Resumen:\n${data.resumen}\n\n💭 Reflexión:\n${data.reflexion}`;
+
+        const textoCompleto = `Resumen: ${data.resumen}. Reflexión: ${data.reflexion}.`;
+
+        // Solicita al backend el audio con voz sintetizada
+        fetch("/generar_audio_resumen", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texto: textoCompleto })
+        })
+          .then(res => res.json())
+          .then(audioData => {
+            if (audioData.status === "ok" && audioData.audio_base64) {
+              if (window.resumenAudio) {
+                window.resumenAudio.pause();
+                window.resumenAudio = null;
+              }
+
+              const audio = new Audio("data:audio/wav;base64," + audioData.audio_base64);
+              audio.play();
+              window.resumenAudio = audio;
+            }
+          });
       } else {
         mostrarAlertaPersonalizada("❌ Error al obtener resumen");
       }
@@ -952,11 +1010,159 @@ document.getElementById("enviar-a-gemma")?.addEventListener("click", () => {
     });
 });
 
-// Resetear campos del modal
-document.getElementById("reset-resumen-btn")?.addEventListener("click", () => {
-  document.getElementById("texto-a-resumir").value = "";
-  document.getElementById("archivo-a-resumir").value = null;
-  document.getElementById("resultado-resumen").value = "";
+  // Botón de silenciar / reanudar la voz del resumen
+  let resumenSilenciado = false;
+  document.getElementById("silenciar-resumen-btn")?.addEventListener("click", () => {
+    const audio = window.resumenAudio;
+    const icono = document.querySelector("#silenciar-resumen-btn img");
+
+    if (!audio) return;
+
+    if (!resumenSilenciado) {
+      audio.pause();
+      icono.src = "/static/images-icons/play.png";
+      resumenSilenciado = true;
+    } else {
+      audio.play();
+      icono.src = "/static/images-icons/stop.png";
+      resumenSilenciado = false;
+    }
+  });
+
+  // Resetear campos del modal
+  document.getElementById("reset-resumen-btn")?.addEventListener("click", () => {
+    document.getElementById("texto-a-resumir").value = "";
+    document.getElementById("archivo-a-resumir").value = null;
+    document.getElementById("resultado-resumen").value = "";
+  });
 });
 
+// Función para mostrar alerta personalizada
+function mostrarAlertaPersonalizada(mensaje) {
+  const alertDiv = document.getElementById("custom-alert");
+  const texto = document.getElementById("alert-text");
+  if (alertDiv && texto) {
+    texto.textContent = mensaje;
+    alertDiv.classList.remove("hidden");
+  }
+}
+
+// MODAL BUSQUEDA -------------------------------------------------
+document.getElementById("buscar-btn").addEventListener("click", () => {
+  document.getElementById("modal-busqueda").classList.remove("hidden");
+});
+
+document.getElementById("cerrar-modal-busqueda").addEventListener("click", () => {
+  document.getElementById("modal-busqueda").classList.add("hidden");
+});
+
+document.getElementById("realizar-busqueda").addEventListener("click", () => {
+  const termino = document.getElementById("input-busqueda").value.trim();
+
+  // Validación de campo vacío
+  if (!termino) {
+    mostrarAlertaPersonalizada("⚠️ No has introducido ningún autor o tema.");
+    return;
+  }
+
+  fetch(`/buscar?termino=${encodeURIComponent(termino)}`)
+    .then(response => response.json())
+    .then(data => {
+      const contenedor = document.getElementById("resultado-busqueda");
+      contenedor.innerHTML = "";
+
+      if (!data.encontrado || data.resultados.length === 0) {
+        mostrarAlertaPersonalizada(`❌ No se ha encontrado información sobre "${termino}".`);
+        return;
+      }
+
+      let currentPage = 1;
+      const itemsPerPage = 5;
+      const totalPages = Math.ceil(data.resultados.length / itemsPerPage);
+
+      function renderPagina(pagina) {
+        let tablaHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Tema</th>
+                <th>Autor</th>
+                <th>Texto</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        const start = (pagina - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const paginaResultados = data.resultados.slice(start, end);
+
+        paginaResultados.forEach((r, index) => {
+          const id = `${pagina}-${index}`;
+          const textoCorto = r.texto.length > 300 ? r.texto.substring(0, 300) + "..." : r.texto;
+          const tema = data.tipo === "tema" ? termino : r.tema;
+          const autor = data.tipo === "autor" ? termino : r.autor;
+          tablaHTML += `
+            <tr>
+              <td>${tema}</td>
+              <td>${autor}</td>
+              <td>
+                <div id="texto-${id}" class="transcripcion-truncada">${textoCorto}</div>
+                ${r.texto.length > 300 ? `
+                  <button class="btn-expandir round-btn" data-id="${id}" data-full="${encodeURIComponent(r.texto)}" title="Ver más">...</button>` : ""}
+              </td>
+            </tr>
+          `;
+        });
+
+        tablaHTML += `</tbody></table>`;
+        contenedor.innerHTML = tablaHTML;
+
+        // Botones ver más / ver menos
+        document.querySelectorAll(".btn-expandir").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-id");
+            const div = document.getElementById(`texto-${id}`);
+            const isExpanded = btn.getAttribute("data-expanded") === "true";
+            if (isExpanded) {
+              div.classList.add("transcripcion-truncada");
+              div.textContent = decodeURIComponent(btn.getAttribute("data-full")).substring(0, 300) + "...";
+              btn.textContent = "...";
+              btn.setAttribute("data-expanded", "false");
+            } else {
+              div.classList.remove("transcripcion-truncada");
+              div.textContent = decodeURIComponent(btn.getAttribute("data-full"));
+              btn.textContent = "▲";
+              btn.setAttribute("data-expanded", "true");
+            }
+          });
+        });
+
+        // Paginación
+        const paginacion = document.createElement("div");
+        paginacion.className = "paginacion";
+        paginacion.innerHTML = `
+          <button ${pagina === 1 ? "disabled" : ""} id="prev-pag">Anterior</button>
+          <span>Página ${pagina} de ${totalPages}</span>
+          <button ${pagina === totalPages ? "disabled" : ""} id="next-pag">Siguiente</button>
+        `;
+        contenedor.appendChild(paginacion);
+
+        document.getElementById("prev-pag")?.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderPagina(currentPage);
+          }
+        });
+
+        document.getElementById("next-pag")?.addEventListener("click", () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderPagina(currentPage);
+          }
+        });
+      }
+
+      renderPagina(currentPage);
+    });
 });

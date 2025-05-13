@@ -38,8 +38,11 @@
       <!------------------------------------ LEFT SIDEBAR ------------------------------------->
       <div class="left-sidebar">
         <div class="sidebar-section">
+          <button id="buscar-btn" title="Buscar">
+            <img src="{{ url_for('static', filename='images-icons/buscar.png') }}" alt="Buscar" style="width: 38px; height: 38px;">
+          </button>
           <button id="view-history-btn" title="Historial">
-            <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial">
+            <img src="{{ url_for('static', filename='images-icons/conversacion.png') }}" alt="Historial" style="width: 38px; height: 38px;">
           </button>
           <button id="view-docs-btn" title="Documentos">
             <img src="{{ url_for('static', filename='images-icons/libros.png') }}" alt="Documentos">
@@ -69,12 +72,19 @@
             Transcripción:
           </div>
           <div class="round-btn-container">
+             <!-- Botón para silenciar voz sintetizada -->
+            <button class="round-btn" id="stop-voice-btn" title="Silenciar voz">
+              <img src="{{ url_for('static', filename='images-icons/stop.png') }}" alt="Stop" class="stop-icon-img">
+            </button>
+             <!-- Botón de guardado -->
             <button class="round-btn" id="save-transcription-btn" title="Guardar">
               <img src="{{ url_for('static', filename='images-icons/guardar.png') }}" alt="Guardar">
             </button>
+            <!-- Botón de exportación a PDF -->
             <button class="round-btn" id="to-pdf-btn" title="Exportar PDF">
               <img src="{{ url_for('static', filename='images-icons/pdf.png') }}" alt="PDF">
             </button>
+            <!-- Botón de Reset -->
             <button id="reset-transcription-btn" class="round-btn" title="Resetear">
               <img src="/static/images-icons/reset.png" alt="Reset" style="width: 45px; height: 45px;">
             </button>
@@ -108,6 +118,7 @@
                 <option value="Música">Música</option>
                 <option value="Psicología">Psicología</option>
                 <option value="Química">Química</option>
+                <option value="Religión">Religión</option>
                 <option value="Sociología">Sociología</option>
                 <option value="Tecnología">Tecnología</option>
               </select>
@@ -154,6 +165,21 @@
     <p id="alert-text"></p>
     <button id="cerrar-alerta-btn">Aceptar</button>  
   </div>
+
+  <!------------------------------ MODAL DE BÚSQUEDA ------------------------------------------->
+<div id="modal-busqueda" class="modal-busqueda hidden">
+  <div class="modal-busqueda-content">
+    <span class="modal-busqueda-close" id="cerrar-modal-busqueda">&times;</span>
+    <h2><img src="{{ url_for('static', filename='images-icons/buscar.png') }}" alt="Buscar" class="modal-icon">Búsqueda</h2>
+    
+    <div class="busqueda-input-group">
+      <input type="text" id="input-busqueda" placeholder="Escribe un autor o tema...">
+      <button id="realizar-busqueda">Buscar</button>
+    </div>
+
+    <div id="resultado-busqueda" class="tabla-resultados-busqueda"></div>
+  </div>
+</div>
 
   <!------------------------------ MODAL HISTORIAL ------------------------------------------->
 <div id="modal-historial" class="modal hidden">
@@ -330,19 +356,19 @@
     
     <!-- Botones juntos -->
       <div class="botones-resumen-row">
-        <div class="archivo-input-file">
-          <input type="file" id="archivo-a-resumir" accept=".txt,.docx">
-          <label for="archivo-a-resumir" class="archivo-label">Seleccionar archivo</label>
-        </div>
-
-        <button id="enviar-a-gemma" class="round-btn" title="Enviar">
-          <img src="/static/images-icons/enviar.png" alt="Enviar" style="width: 35px; height: 35px;">
-        </button>
-
-        <button id="reset-resumen-btn" class="round-btn" title="Resetear">
-          <img src="/static/images-icons/reset.png" alt="Reset" style="width: 45px; height: 45px;">
-        </button>
+      <div class="archivo-input-file">
+        <input type="file" id="archivo-a-resumir" accept=".txt,.docx">
+        <label for="archivo-a-resumir" class="archivo-label">Seleccionar archivo</label>
       </div>
+
+      <button id="enviar-a-gemma" class="round-btn" title="Enviar">
+        <img src="/static/images-icons/enviar.png" alt="Enviar" style="width: 35px; height: 35px;">
+      </button>
+
+      <button id="reset-resumen-btn" class="round-btn" title="Resetear">
+        <img src="/static/images-icons/reset.png" alt="Reset" style="width: 45px; height: 45px;">
+      </button>
+    </div>
       <br>
       <hr>
       <br>
@@ -351,7 +377,13 @@
         <span>Resumen Fausto:</span>
       </h3>
       <textarea id="resultado-resumen" class="input-textarea" readonly></textarea>
-    </div>
+      <!-- 🆕 Botón silenciar -->
+      <div style="display: flex; justify-content: center; margin-top: 10px;">
+        <button id="silenciar-resumen-btn" class="round-btn" title="Silenciar voz resumen">
+          <img src="/static/images-icons/stop.png" alt="Stop" style="width: 45px; height: 45px;">
+        </button>
+      </div>
+      </div>
         
   <!-- Scripts --> 
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
