@@ -789,6 +789,131 @@ function mostrarAlertaPersonalizada(mensaje) {
     });
   }
 
+  // Borrar Embeddings
+  document.getElementById("borrar-embedding-btn")?.addEventListener("click", () => {
+  mostrarAlertaPersonalizada("🗑️ Borrando embeddings...");
+
+  fetch("/borrar_embeddings", {
+    method: "POST"
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "ok") {
+        mostrarAlertaPersonalizada("✅ Embeddings eliminados correctamente.");
+        cargarEstadoRAG(); // 🔁 Actualiza la tabla automáticamente
+      } else {
+        mostrarAlertaPersonalizada("❌ Error al borrar embeddings.");
+      }
+    })
+    .catch(err => {
+      console.error("Error al borrar embeddings:", err);
+      mostrarAlertaPersonalizada("❌ Error inesperado al borrar embeddings.");
+    });
+});
+
+  // Cargar estado RAG
+  let datosRAG = [];
+  let currentPage = 1;
+  const itemsPerPage = 5;
+
+  function cargarEstadoRAG() {
+  fetch("/estado_rag")
+    .then(res => res.json())
+    .then(data => {
+      try {
+        datosRAG = data;
+        currentPage = 1;
+        renderPaginaRAG(currentPage);
+        mostrarAlertaPersonalizada("✅ Embeddings eliminados correctamente."); // ✅ aquí
+      } catch (errorInterno) {
+        console.error("Error interno en renderPaginaRAG:", errorInterno);
+        mostrarAlertaPersonalizada("❌ Error al mostrar la tabla RAG.");
+      }
+    })
+    .catch(err => {
+      console.error("Error al cargar datos del RAG:", err);
+      mostrarAlertaPersonalizada("❌ No se pudo actualizar la tabla RAG.");
+    });
+}
+
+  function renderPaginaRAG(pagina) {
+    const tabla = document.getElementById("tabla-rag");
+    if (!tabla) {
+      console.warn("⚠ No se encontró #tabla-rag");
+      return;
+    }
+
+    tabla.innerHTML = "";
+
+    const start = (pagina - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginaDatos = datosRAG.slice(start, end);
+
+    paginaDatos.forEach(item => {
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td>${item.id}</td>
+        <td>${item.tema}</td>
+        <td>${item.autor}</td>
+        <td>${item.texto.length > 70 ? item.texto.substring(0, 70) + "..." : item.texto}</td>
+        <td style="text-align: center; font-size: 18px;">
+        ${item.procesado === 1 ? "✅" : "❌"}
+      </td>
+      `;
+      tabla.appendChild(fila);
+    });
+
+    renderPaginacion(); // se llama después de renderizar la tabla
+  }
+
+ function renderPaginacion() {
+  const paginacionDiv = document.getElementById("paginacion-rag");
+  paginacionDiv.innerHTML = "";
+
+  const totalPages = Math.ceil(datosRAG.length / itemsPerPage);
+
+  // Crea contenedor interior para los botones e indicador
+  const contenedor = document.createElement("div");
+  contenedor.style.display = "flex";
+  contenedor.style.justifyContent = "center";
+  contenedor.style.alignItems = "center";
+  contenedor.style.gap = "15px";
+  contenedor.style.marginTop = "0";
+
+  const btnPrev = document.createElement("button");
+  btnPrev.textContent = "Anterior";
+  btnPrev.disabled = currentPage === 1;
+  btnPrev.classList.add("btn-paginacion");
+
+  const btnNext = document.createElement("button");
+  btnNext.textContent = "Siguiente";
+  btnNext.disabled = currentPage === totalPages;
+  btnNext.classList.add("btn-paginacion");
+
+  const pageIndicator = document.createElement("span");
+  pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
+
+  btnPrev.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderPaginaRAG(currentPage);
+    }
+  });
+
+  btnNext.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderPaginaRAG(currentPage);
+    }
+  });
+
+  // Añade los elementos en orden exacto
+  contenedor.appendChild(btnPrev);
+  contenedor.appendChild(pageIndicator);
+  contenedor.appendChild(btnNext);
+  paginacionDiv.appendChild(contenedor);
+}
+
   // ✅ Exportar a PDF---------------------------------------------------------------
   document.getElementById("to-pdf-btn").addEventListener("click", async () => {
     const texto = document.getElementById("transcription-text").textContent.replace("Transcripción:", "").trim();

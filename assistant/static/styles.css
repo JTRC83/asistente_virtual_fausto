@@ -544,18 +544,40 @@ body.dark-mode input::placeholder {
   font-weight: bold;
 }
 .paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
   margin-top: 15px;
-  text-align: center;
+  font-size: 14px;
+  line-height: 1;
 }
+
 .paginacion button {
-  margin: 0 10px;
   background-color: #e82f1a;
   color: white;
   border: none;
   padding: 6px 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: none;
 }
+
+.paginacion span,
+.paginacion p {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.paginacion > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
 
 .acciones-cell {
   display: flex;
@@ -1155,7 +1177,7 @@ body.dark-mode .document-table tr:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 15px;
   margin-top: 20px;
 }
 
@@ -1164,7 +1186,7 @@ body.dark-mode .document-table tr:hover {
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 10px 20px;
+  padding: 6px 16px;
   font-size: 14px;
   cursor: pointer;
   min-width: 120px;
@@ -1193,4 +1215,141 @@ body.dark-mode .document-table tr:hover {
 .centered-silenciar-btn {
   text-align: center;
   margin-top: 10px;
+}
+
+/* Estilo general para ambos botones */
+#ejecutar-embedding-btn,
+#borrar-embedding-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #e82f1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+}
+
+/* Estilo para ambas imágenes internas */
+#ejecutar-embedding-btn img,
+#borrar-embedding-btn img {
+  width: 60px !important;
+  height: 60px !important;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+
+#borrar-embedding-btn img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+
+body.dark-mode .modal-busqueda-content {
+  background: #383838 !important;
+  color: #fff !important;
+  border-radius: 20px;
+  box-shadow: 0 2px 20px #0008;
+  padding: 30px;
+}
+
+/* TABLA */
+body.dark-mode .modal-busqueda-content table {
+  background: #383838 !important;
+  color: #fff !important;
+  border-radius: 12px;
+  overflow: hidden;
+  border-collapse: collapse !important;
+  border: 1.1px solid #d0d0d0 !important; /* Borde exterior gris claro */
+}
+body.dark-mode .modal-busqueda-content th,
+body.dark-mode .modal-busqueda-content td {
+  border-color: #d0d0d0 !important;
+  border-width: 1.1px !important;
+  border-style: solid !important;
+}
+body.dark-mode .modal-busqueda-content th {
+  background: #2c2929 !important;
+  color: #fff !important;
+  font-size: 1.13rem;
+}
+body.dark-mode .modal-busqueda-content td {
+  background: #494949 !important;
+  color: #f1f1f1 !important;
+}
+
+/* INPUT */
+body.dark-mode .modal-busqueda-content input[type="text"] {
+  background: #434343 !important;
+  color: #f1f1f1 !important;
+  border-radius: 25px;
+  border: 2px solid #888;
+  font-size: 1.15rem;
+  padding: 10px 22px;
+}
+body.dark-mode .modal-busqueda-content input[type="text"]::placeholder {
+  color: #bcbcbc !important;
+}
+
+/* BOTONES DE LA MODAL Y PAGINACIÓN */
+body.dark-mode .modal-busqueda-content button,
+body.dark-mode .paginacion button {
+  background: #e53935 !important;
+  color: #fff !important;
+  border-radius: 20px;
+  font-size: 14px;
+  padding: 8px 28px;
+  margin: 0 4px;
+  border: none;
+  outline: none;
+  opacity: 1;
+  transition: background 0.18s, opacity 0.18s;
+}
+body.dark-mode .modal-busqueda-content button:disabled,
+body.dark-mode .paginacion button:disabled {
+  background: #e53935 !important;
+  color: #fff !important;
+  cursor: not-allowed;
+  /* Sin opacity */
+  filter: grayscale(0); /* Fuerza el color */
+}
+
+/* BOTÓN AMPLIAR (REDONDO Y A LA IZQUIERDA) */
+body.dark-mode .btn-expandir,
+body.dark-mode .btn-expandir.round-btn {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 50% !important;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  max-width: 30px;
+  max-height: 30px;
+  font-size: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;   /* separación con el texto */
+  margin-left: 0;
+  box-shadow: none;
+  padding: 0;
+  vertical-align: middle;
+  transition: background 0.18s;
+}
+body.dark-mode .btn-expandir.round-btn:hover,
+body.dark-mode .btn-expandir:hover {
+  background: #d32f2f !important;
+}
+
+/* El botón de ampliar debe ir antes del texto en el HTML/JS */
+
+/* TRUNCADO */
+body.dark-mode .transcripcion-truncada {
+  color: #eee;
 }

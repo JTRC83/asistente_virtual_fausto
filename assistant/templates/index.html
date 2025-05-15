@@ -262,14 +262,30 @@
         <!-- Filas se insertan por JS -->
       </tbody>
     </table>
-    <div id="contenedor-embedding-btn" style="margin-top: 15px;">
-      <button id="ejecutar-embedding-btn" class="round-btn" title="Ejecutar Embedding">
+    <div id="contenedor-embedding-btn" style="margin-top: 15px; display: flex; justify-content: center; gap: 20px;">
+      <!-- Ejecutar embeddings -->
+      <button id="ejecutar-embedding-btn" title="Ejecutar Embedding">
         <img src="{{ url_for('static', filename='images-icons/embedding.png') }}"
-             alt="Run Embedding"
-             class="icono-embedding">
+            alt="Run Embedding">
+      </button>
+
+      <!-- Borrar embeddings -->
+      <button id="borrar-embedding-btn" title="Borrar todos los embeddings">
+        <img src="{{ url_for('static', filename='images-icons/basura.png') }}"
+            alt="Borrar Embeddings">
       </button>
     </div>
     <div id="paginacion-rag" class="paginacion"></div>
+  </div>
+
+  <!-- ✅ ALERTA PERSONALIZADA DENTRO DEL MODAL, PERO FUERA DE modal-content -->
+  <div id="custom-alert" class="custom-alert hidden">
+    <h3>
+      <img src="{{ url_for('static', filename='images-icons/alerta.png') }}" alt="alerta" />
+      Fausto dice...
+    </h3>
+    <p id="alert-text">Texto de alerta</p>
+    <button id="cerrar-alerta-btn">Aceptar</button>
   </div>
 </div>
 

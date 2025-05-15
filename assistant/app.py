@@ -42,6 +42,8 @@ from database.db_manager import (
     DATABASE_PATH
 )
 
+from database.db_manager import borrar_todos_los_embeddings
+
 # ────────────────
 # 🚀 Inicialización temprana
 # ────────────────
@@ -67,14 +69,20 @@ def generar_embeddings(texto):
 # Utiliza embeddings para encontrar los textos más similares
 def recuperar_contexto(texto_usuario, top_k=3):
     vector_usuario = modelo_embeddings.encode(texto_usuario)
-    base = obtener_embeddings()
-    
-    vectores = [vec for vec, _ in base]
-    textos = [txt for _, txt in base]
+    base = obtener_embeddings()  # [(vector, texto, autor, tema)]
+
+    vectores = [vec for vec, _, _, _ in base]
+    metadatos = [(txt, autor, tema) for _, txt, autor, tema in base]
+
     similitudes = cosine_similarity([vector_usuario], vectores)[0]
-    
     top_indices = np.argsort(similitudes)[::-1][:top_k]
-    return [textos[i] for i in top_indices]
+
+    contexto = []
+    for i in top_indices:
+        txt, autor, tema = metadatos[i]
+        contexto.append(f"Tema: {tema}\nAutor: {autor}\nTexto: {txt}")
+    
+    return contexto
 
 # Ruta para buscar por autor o tema
 @app.route('/buscar')
@@ -205,8 +213,8 @@ def ejecutar_embeddings():
         cursor = conn.cursor()
 
         for item in nuevos:
-            # Generar vector
-            embedding = generar_embeddings(item['texto'])
+            texto_con_contexto = f"Tema: {item['tema']}\nAutor: {item['autor']}\nTexto: {item['texto']}"
+            embedding = generar_embeddings(texto_con_contexto)
 
             # Guardar el embedding en la tabla
             vector_str = json.dumps(embedding)  # Convertimos a JSON string
@@ -235,6 +243,17 @@ def ejecutar_embeddings():
             "mensaje": "Ocurrió un error al generar los embeddings.",
             "detalle": str(e)
         }), 500
+    
+# Ruta para borrar todos los embeddings
+@app.route("/borrar_embeddings", methods=["POST"])
+def borrar_embeddings():
+    try:
+        borrar_todos_los_embeddings()
+        return jsonify({"status": "ok", "mensaje": "Embeddings eliminados correctamente."})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # 👈 Esto te dará la pista real en consola
+        return jsonify({"status": "error", "mensaje": str(e)}), 500
     
 # Ruta para cargar archivos
 @app.route("/cargar_archivo", methods=["POST"])

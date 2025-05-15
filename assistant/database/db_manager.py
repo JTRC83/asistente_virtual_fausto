@@ -147,15 +147,17 @@ def obtener_embeddings():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT e.vector, c.texto 
+        SELECT e.vector, c.texto, c.autor, c.tema 
         FROM embeddings e
         JOIN conocimientos c ON c.id = e.id_conocimiento
     """)
     resultados = cursor.fetchall()
     conn.close()
 
-    # Convertir JSON string a lista
-    return [(json.loads(row["vector"]), row["texto"]) for row in resultados]
+    return [
+        (json.loads(row["vector"]), row["texto"], row["autor"], row["tema"])
+        for row in resultados
+    ]
 
 # Busca en la base de datos conocimientos por autor o tema
 # Devuelve una lista de resultados y el tipo de búsqueda (tema o autor)
@@ -179,3 +181,13 @@ def buscar_por_autor_o_tema(termino):
         return resultados_autor, "autor"
 
     return [], None
+
+# Función para borrar todos los embeddings
+def borrar_todos_los_embeddings():
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")  # 🧠 Activar integridad referencial
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM embeddings")
+    cursor.execute("UPDATE conocimientos SET procesado = 0")
+    conn.commit()
+    conn.close()
